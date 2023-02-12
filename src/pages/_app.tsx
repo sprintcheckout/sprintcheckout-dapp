@@ -26,12 +26,13 @@ import {
 
 import {Pruebas} from "../components/Pruebas";
 import {Account} from "../components";
+import {SprintcheckoutDapp} from "../components/SprintcheckoutDapp";
 
 
 function App({Component, pageProps}: AppProps) {
-    const [mounted, setMounted] = React.useState(false)
+    // const [mounted, setMounted] = React.useState(false)
 
-    React.useEffect(() => setMounted(true), [])
+    // React.useEffect(() => setMounted(true), [])
     let amount;
     let selectedToken;
     let selectedCurrency;
@@ -46,48 +47,17 @@ function App({Component, pageProps}: AppProps) {
                         <title>My wagmi + RainbowKit App</title>
                     </NextHead>
 
-                    {mounted && <Component {...pageProps} />}
+                    {<Component {...pageProps} />}
 
-                    <Center border='1px' borderColor='gray.200' borderRadius="12px" alignSelf="center" maxWidth="70ch">
+                    <SprintcheckoutDapp />
 
-                        <TableContainer>
-                            <Table variant='simple'>
-                                <Thead>
-                                    <Tr>
-                                        <Th isNumeric>AMOUNT</Th>
-                                        <Th>CURRENCY</Th>
-                                    </Tr>
-                                </Thead>
-                                <Tbody>
-                                    <Tr>
-                                        <Td isNumeric>25.4</Td>
-                                        <Td>USD</Td>
-                                    </Tr>
-                                    <Tr>
-                                        <Td isNumeric>30.48</Td>
-                                        <Td>
-                                            <Select placeholder='Select token' borderRadius="20px">
-                                                <option value='option1'>USDC</option>
-                                                <option value='option2'>DAI</option>
-                                                <option value='option3'>USDT</option>
-                                            </Select>
-                                        </Td>
-                                    </Tr>
-                                </Tbody>
-                            </Table>
-                        </TableContainer>
-                    </Center>
-
-                    <Center>{amount}{selectedToken} per {selectedCurrency} (No hidden fees <Link
-                        href='https://www.coingecko.com/'>Coingecko)</Link></Center>
-
-                    <Center alignContent="center" width="50%" marginTop="15px">
+                    <Center alignContent="center" width="100%" marginTop="15px">
                         <Button backgroundColor="#0E76FD"
                         > Paga
                         </Button>
                     </Center>
 
-                    <Center alignContent="center" width="50%" marginTop="15px">
+                    <Center alignContent="center" marginTop="15px">
                         <ConnectButton/>
                         {/*{isConnected && <Account/>}*/}
                     </Center>
