@@ -1,32 +1,29 @@
 {
-  "name": "wagmi-template-next-with-rainbowkit",
+  "name": "wagmi-template-vite-with-rainbowkit",
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@chakra-ui/react": "^2.4.9",
-    "@emotion/react": "^11.10.5",
-    "@emotion/styled": "^11.10.5",
     "@rainbow-me/rainbowkit": "^0.8.1",
-    "ethers": "^5.7.0",
-    "framer-motion": "^8.5.4",
-    "next": "^13.0.0",
+    "buffer": "^6.0.3",
+    "ethers": "^5.7.2",
+    "process": "^0.11.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "util": "^0.12.4",
     "wagmi": "~0.11.0"
   },
   "devDependencies": {
-    "@types/node": "^17.0.31",
     "@types/react": "^18.0.9",
     "@types/react-dom": "^18.0.3",
-    "@wagmi/cli": "^0.1.5",
-    "eslint": "^8.15.0",
-    "eslint-config-next": "^12.1.6",
-    "typescript": "^4.9.4"
+    "@vitejs/plugin-react": "^2.1.0",
+    "@wagmi/cli": "^0.1.6",
+    "typescript": "^4.9.4",
+    "vite": "^3.1.8"
   }
 }

@@ -115,7 +115,7 @@ export function SprintcheckoutDapp() {
     async function getAuth0Token() {
 
         if (!authResponse) {
-            let authBody = '{"client_id":"' + process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID + '","client_secret":"' + process.env.NEXT_PUBLIC_AUTH0_CLIENT_SECRET + '","audience":"' + SPRINTCHECKOUT_BASE_URL + '","grant_type":"client_credentials"}'
+            let authBody = '{"client_id":"' + import.meta.env.VITE_AUTH0_CLIENT_ID + '","client_secret":"' + import.meta.env.VITE_AUTH0_CLIENT_SECRET + '","audience":"' + SPRINTCHECKOUT_BASE_URL + '","grant_type":"client_credentials"}'
             authResponse = await axios.post(AUTH0_OAUTH_URL, authBody, {
                 headers: {
                     'content-type': `application/json`

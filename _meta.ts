@@ -3,9 +3,9 @@ import { createTemplate } from '../../../src/utils'
 
 export default createTemplate({
   title: 'RainbowKit',
-  description: 'Next.js wagmi project with RainbowKit included',
+  description: 'Vite (React) wagmi project with RainbowKit included',
   hooks: selectAndInjectProviders({
-    envNamespace: 'process.env',
-    envPrefix: 'NEXT_PUBLIC_',
+    envNamespace: 'import.meta.env',
+    envPrefix: 'VITE_',
   }),
 })
