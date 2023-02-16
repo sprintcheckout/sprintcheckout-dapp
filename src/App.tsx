@@ -7,7 +7,6 @@ import {ProcessPayment} from "./components/ProcessPayment";
 import {Center} from "@chakra-ui/react";
 
 export function App() {
-    const {isConnected} = useAccount()
     return (
         <>
             <Center marginTop="20px" marginBottom="20px">
@@ -16,12 +15,9 @@ export function App() {
 
             <SprintcheckoutDapp/>
 
-            <Center alignContent="center" width="100%" marginTop="15px">
-                <ProcessPayment isConnected={isConnected}/>
-            </Center>
+{/*TODO: Check why Connect Button is not changing address when changing MetaMask account (see wagmin template and check it works)*/}
             <Center alignContent="center" marginTop="15px">
                 <ConnectButton/>
-
             </Center>
             {/*{isConnected && <Account/>}*/}
         </>

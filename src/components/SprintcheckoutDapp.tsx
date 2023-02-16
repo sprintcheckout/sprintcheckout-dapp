@@ -3,6 +3,7 @@ import {Center, Link, Select, Table, TableContainer, Tbody, Td, Th, Thead, Tr} f
 import * as React from "react";
 import {useEffect, useState} from "react";
 import axios, {AxiosResponse} from "axios";
+import {ProcessPayment} from "./ProcessPayment";
 
 const AUTH0_OAUTH_URL = 'https://dev-0p0zfam6.us.auth0.com/oauth/token';
 const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
@@ -29,8 +30,8 @@ export function SprintcheckoutDapp() {
 
     let authResponse: AxiosResponse;
     let paymentSessionId: string;
-    let merchantId: string;
-    let orderId: string;
+    // let merchantId: string;
+    // let orderId: string;
     let currency: string;
     let successUrl: string;
     let failUrl: string;
@@ -57,15 +58,18 @@ export function SprintcheckoutDapp() {
     const [selectedCurrency, setSelectedCurrency] = useState<string | undefined>("");
     const [amount, setAmount] = useState<string | undefined>("");
     const [tokenAmount, setTokenAmount] = useState<string | undefined>("");
+    const [orderId, setOrderId] = useState<string | undefined>("");
+    const [merchantId, setMerchantId] = useState<string | undefined>("");
 
     const [tokenConversionRate, setTokenConversionRate] = useState<string | undefined>("");
     const [count, setCount] = useState(0);
+    const {isConnected} = useAccount()
 
 
     function setDataFromPaymentSession(paymentSession: AxiosResponse) {
 
-        merchantId = paymentSession.data.merchantId
-        orderId = paymentSession.data.orderId
+        setMerchantId(paymentSession.data.merchantId);
+        setOrderId(paymentSession.data.orderId);
         currency = paymentSession.data.currency
         successUrl = paymentSession.data.successUrl
         failUrl = paymentSession.data.failUrl
@@ -95,11 +99,7 @@ export function SprintcheckoutDapp() {
             // TODO show error, no session available
         }
 
-    }, [count]);
-
-    const countUp = () => {
-        setCount(count + 1);
-    }
+    }, []);
 
     async function getMerchantPaymentSettings(merchantId: string) {
 
@@ -232,6 +232,9 @@ export function SprintcheckoutDapp() {
             </Center>
             <Center>{tokenConversionRate} {selectedToken} per {selectedCurrency} (No hidden fees <Link
                 href='https://www.coingecko.com/'>Coingecko)</Link>
+            </Center>
+            <Center alignContent="center" width="100%" marginTop="15px">
+                <ProcessPayment isConnected={isConnected} merchantAmount={tokenAmount} spcFee={tokenAmount} orderId={orderId} merchantId={merchantId} />
             </Center>
         </>
     )
