@@ -1,9 +1,10 @@
 import {useAccount, useEnsName} from 'wagmi'
-import {Center, Link, Select, Table, TableContainer, Tbody, Td, Th, Thead, Tr} from "@chakra-ui/react";
+import {Box, Center, Link, Select, Table, TableContainer, Tbody, Td, Th, Thead, Tr, Text} from "@chakra-ui/react";
 import * as React from "react";
 import {useEffect, useState} from "react";
 import axios, {AxiosResponse} from "axios";
 import {ProcessPayment} from "./ProcessPayment";
+import {ConnectButton} from "@rainbow-me/rainbowkit";
 
 const AUTH0_OAUTH_URL = 'https://dev-0p0zfam6.us.auth0.com/oauth/token';
 const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
@@ -197,45 +198,59 @@ export function SprintcheckoutDapp() {
 
     return (
         <>
-            <Center border='1px' borderColor='gray.200' borderRadius="12px" alignSelf="center" /*maxWidth="70ch"*/>
-                <TableContainer>
-                    <Table variant='simple'>
-                        <Thead>
-                            <Tr>
-                                <Th isNumeric>AMOUNT</Th>
-                                <Th>CURRENCY</Th>
-                            </Tr>
-                        </Thead>
-                        <Tbody>
-                            <Tr>
-                                <Td isNumeric>{amount}</Td>
-                                <Td>{selectedCurrency}</Td>
-                            </Tr>
-                            <Tr>
-                                <Td isNumeric>{tokenAmount}</Td>
-                                <Td>
-                                    <Select borderRadius="20px" onChange={onChangeSendTokenAndConversion}>
-                                        {pricesForAmountRounded?.map((elem, index) => {
-                                            if (index === 0 && !token) {
-                                                token = elem.symbol.toUpperCase();
-                                            }
-                                            return <option key={elem.symbol} value={elem.symbol}>
-                                                        {elem.symbol}
-                                                   </option>;
-                                        })}
-                                    </Select>
-                                </Td>
-                            </Tr>
-                        </Tbody>
-                    </Table>
-                </TableContainer>
-            </Center>
-            <Center>{tokenConversionRate} {selectedToken} per {selectedCurrency} (No hidden fees <Link
-                href='https://www.coingecko.com/'>Coingecko)</Link>
-            </Center>
-            <Center alignContent="center" width="100%" marginTop="15px">
-                <ProcessPayment isConnected={isConnected} merchantAmount={tokenAmount} spcFee={tokenAmount} orderId={orderId} merchantId={merchantId} />
-            </Center>
+            <Box display="flex" flexDirection="column">
+
+                <Center border='1px' borderColor='gray.200' borderRadius="12px" minWidth="375px" maxWidth="400px" margin={"0 auto"} >
+                    <TableContainer>
+                        <Table variant='simple'>
+                            <Thead>
+                                <Tr>
+                                    <Th isNumeric>AMOUNT</Th>
+                                    <Th>CURRENCY</Th>
+                                </Tr>
+                            </Thead>
+                            <Tbody>
+                                <Tr>
+                                    <Td isNumeric>{amount}</Td>
+                                    <Td>{selectedCurrency}</Td>
+                                </Tr>
+                                <Tr>
+                                    <Td fontWeight={"bold"} color="#3182CE" isNumeric>{tokenAmount}</Td>
+                                    <Td>
+                                        <Select borderRadius="20px" onChange={onChangeSendTokenAndConversion}>
+                                            {pricesForAmountRounded?.map((elem, index) => {
+                                                if (index === 0 && !token) {
+                                                    token = elem.symbol.toUpperCase();
+                                                }
+                                                return <option color={"#3182CE"} key={elem.symbol} value={elem.symbol}>
+                                                   <Text  fontWeight={"bold"}> {elem.symbol}</Text>
+                                                </option>;
+                                            })}
+                                        </Select>
+                                    </Td>
+                                </Tr>
+                            </Tbody>
+                        </Table>
+                    </TableContainer>
+                </Center>
+                <Center marginTop={3}>
+                    <Text color="#718096" fontSize={13}>
+                        {tokenConversionRate} {selectedToken} per {selectedCurrency} (No hidden fees <Link
+                        href='https://www.coingecko.com/'>Coingecko)</Link>
+                    </Text>
+                </Center>
+
+                {/*TODO: Check why Connect Button is not changing address when changing MetaMask account (see wagmin template and check it works)*/}
+                <Center alignContent="center" marginTop="15px" marginBottom="30px" >
+                    <ConnectButton />
+                </Center>
+
+                {isConnected?
+                    <Center alignContent="center" width="100%" marginTop="15px" paddingBottom={10}>
+                        <ProcessPayment isConnected={isConnected} merchantAmount={tokenAmount} spcFee={tokenAmount}
+                                        orderId={orderId} merchantId={merchantId}/>
+                    </Center> : null}
+            </Box>
         </>
     )
 }
