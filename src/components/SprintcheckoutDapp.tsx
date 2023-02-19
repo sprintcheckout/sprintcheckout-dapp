@@ -1,5 +1,5 @@
 import {useAccount, useEnsName} from 'wagmi'
-import {Box, Center, Link, Select, Table, TableContainer, Tbody, Td, Th, Thead, Tr, Text} from "@chakra-ui/react";
+import {Box, Center, Link, Select, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr} from "@chakra-ui/react";
 import * as React from "react";
 import {useEffect, useState} from "react";
 import axios, {AxiosResponse} from "axios";
@@ -200,7 +200,8 @@ export function SprintcheckoutDapp() {
         <>
             <Box display="flex" flexDirection="column">
 
-                <Center border='1px' borderColor='gray.200' borderRadius="12px" minWidth="375px" maxWidth="400px" margin={"0 auto"} >
+                <Center border='1px' borderColor='gray.200' borderRadius="12px" minWidth="375px" maxWidth="400px"
+                        margin={"0 auto"}>
                     <TableContainer>
                         <Table variant='simple'>
                             <Thead>
@@ -217,14 +218,14 @@ export function SprintcheckoutDapp() {
                                 <Tr>
                                     <Td fontWeight={"bold"} color="#3182CE" isNumeric>{tokenAmount}</Td>
                                     <Td>
-                                        <Select borderRadius="20px" onChange={onChangeSendTokenAndConversion}>
+                                        <Select style={{ fontWeight: 'bold' }} color={"#3182CE"} borderRadius="20px" onChange={onChangeSendTokenAndConversion}>
                                             {pricesForAmountRounded?.map((elem, index) => {
                                                 if (index === 0 && !token) {
                                                     token = elem.symbol.toUpperCase();
                                                 }
-                                                return <option color={"#3182CE"} key={elem.symbol} value={elem.symbol}>
-                                                   <Text  fontWeight={"bold"}> {elem.symbol}</Text>
-                                                </option>;
+                                                return <option key={elem.symbol} value={elem.symbol}>
+                                                    {elem.symbol}
+                                                    </option>;
                                             })}
                                         </Select>
                                     </Td>
@@ -234,22 +235,30 @@ export function SprintcheckoutDapp() {
                     </TableContainer>
                 </Center>
                 <Center marginTop={3}>
-                    <Text color="#718096" fontSize={13}>
-                        {tokenConversionRate} {selectedToken} per {selectedCurrency} (No hidden fees <Link
-                        href='https://www.coingecko.com/'>Coingecko)</Link>
+                    <Text color="#718096" fontSize={13} mr={1}>
+                        {tokenConversionRate} {selectedToken} per {selectedCurrency} (No hidden fees{' '}
                     </Text>
+                    <Text color="#718096" fontSize={13}>
+                        <Link href='https://www.coingecko.com/' textDecor="underline">Coingecko)</Link>
+                    </Text>
+
                 </Center>
 
                 {/*TODO: Check why Connect Button is not changing address when changing MetaMask account (see wagmin template and check it works)*/}
-                <Center alignContent="center" marginTop="15px" marginBottom="30px" >
-                    <ConnectButton />
+                <Center alignContent="center" marginTop="15px" marginBottom="30px">
+                    <ConnectButton accountStatus={"address"} chainStatus="name" showBalance={false}/>
                 </Center>
 
-                {isConnected?
+                {isConnected ?
                     <Center alignContent="center" width="100%" marginTop="15px" paddingBottom={10}>
                         <ProcessPayment isConnected={isConnected} merchantAmount={tokenAmount} spcFee={tokenAmount}
                                         orderId={orderId} merchantId={merchantId}/>
                     </Center> : null}
+
+                {/* TODO add icons and links */}
+                {/*<Center>*/}
+                {/*    <Image src={"/src/resources/argent.png"} />*/}
+                {/*</Center>*/}
             </Box>
         </>
     )
