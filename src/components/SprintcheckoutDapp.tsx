@@ -277,17 +277,18 @@ export function SprintcheckoutDapp() {
                 <Center alignContent="center" marginTop={10} marginBottom="30px">
                     <ConnectButton accountStatus={"address"} chainStatus="name" showBalance={false}/>
                 </Center>
+            </Box>
 
-                {isConnected ?
-                    <Center alignContent="center" width="100%" paddingBottom={8}>
-                        <ProcessPayment isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId} merchantId={merchantId} selectedToken={selectedToken}/>
-                    </Center> : null}
+        {isConnected ?
+
+                <ProcessPayment isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId} merchantId={merchantId} selectedToken={selectedToken}/> : null
+        }
 
                 {/* TODO add icons and links */}
                 {/*<Center>*/}
                 {/*    <Image src={"/src/resources/argent.png"} />*/}
                 {/*</Center>*/}
-            </Box>
+
         </>
     )
 }
