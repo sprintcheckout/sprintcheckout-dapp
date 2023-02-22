@@ -1,5 +1,19 @@
 import {useAccount, useEnsName} from 'wagmi'
-import {Box, Center, Link, Select, Table, TableContainer, Tbody, Td, Text, Th, Thead, Tr} from "@chakra-ui/react";
+import {
+    Box,
+    Center,
+    Link,
+    Select,
+    Spinner,
+    Table,
+    TableContainer,
+    Tbody,
+    Td,
+    Text,
+    Th,
+    Thead,
+    Tr
+} from "@chakra-ui/react";
 import * as React from "react";
 import {useEffect, useState} from "react";
 import axios, {AxiosResponse} from "axios";
@@ -7,7 +21,8 @@ import {ProcessPayment} from "./ProcessPayment";
 import {ConnectButton} from "@rainbow-me/rainbowkit";
 
 const AUTH0_OAUTH_URL = 'https://dev-0p0zfam6.us.auth0.com/oauth/token';
-const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
+// const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';// TODO RESTORE
+const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout';
 const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
 
 interface IHash {
@@ -27,9 +42,11 @@ interface TokenConversionCollections {
 let tokenConversionsList: TokenConversionCollections;
 let pricesForAmountRounded: Array<TokenConversion>;
 
+let authResponse: AxiosResponse;
+
+
 export function SprintcheckoutDapp() {
 
-    let authResponse: AxiosResponse;
     let paymentSessionId: string;
     // let merchantId: string;
     // let orderId: string;
@@ -107,22 +124,24 @@ export function SprintcheckoutDapp() {
         let authResponse = await getAuth0Token();
         let paymentSettingsResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_settings/' + merchantId, {
             headers: {
-                'Authorization': `Bearer ${authResponse.data.access_token}`
+                // 'Authorization': `Bearer ${authResponse.data.access_token}` // TODO restore
             }
         });
         return paymentSettingsResponse;
     }
 
     async function getAuth0Token() {
-
         if (!authResponse) {
-            let authBody = '{"client_id":"' + import.meta.env.VITE_AUTH0_CLIENT_ID + '","client_secret":"' + import.meta.env.VITE_AUTH0_CLIENT_SECRET + '","audience":"' + SPRINTCHECKOUT_BASE_URL + '","grant_type":"client_credentials"}'
-            authResponse = await axios.post(AUTH0_OAUTH_URL, authBody, {
-                headers: {
-                    'content-type': `application/json`
-                }
-            });
+            // TODO RESTORE
+            // let authBody = '{"client_id":"' + import.meta.env.VITE_AUTH0_CLIENT_ID + '","client_secret":"' + import.meta.env.VITE_AUTH0_CLIENT_SECRET + '","audience":"' + SPRINTCHECKOUT_BASE_URL + '","grant_type":"client_credentials"}'
+            // authResponse = await axios.post(AUTH0_OAUTH_URL, authBody, {
+            //     headers: {
+            //         'content-type': `application/json`
+            //     }
+            // });
         }
+        authResponse = {config: {}, data: undefined, headers: undefined, status: 0, statusText: ""};
+
         return authResponse;
     }
 
@@ -131,7 +150,7 @@ export function SprintcheckoutDapp() {
         let authResponse = await getAuth0Token();
         let paymentSessionResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/' + id, {
             headers: {
-                'Authorization': `Bearer ${authResponse.data.access_token}`
+                // 'Authorization': `Bearer ${authResponse.data.access_token}` // TODO restore
             }
         });
         return paymentSessionResponse;
@@ -143,7 +162,8 @@ export function SprintcheckoutDapp() {
         // let tokensResponse = await axios.get('http://localhost:8080/payment_session/token_conversions/' + id, {
         let tokensResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/token_conversions/' + id, {
             headers: {
-                'Authorization': `Bearer ${authResponse.data.access_token}`
+                // 'Authorization': `Bearer ${authResponse.data.access_token}` // TODO restore
+                'Authorization': `Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjR5LTl6am1MYldIZV84MGhoVEMydyJ9.eyJpc3MiOiJodHRwczovL2Rldi0wcDB6ZmFtNi51cy5hdXRoMC5jb20vIiwic3ViIjoiRVpVbWpITmdaTTFxUDh1UVhWUTB3dkpJaE8yd2pKWFBAY2xpZW50cyIsImF1ZCI6Imh0dHBzOi8vc3ByaW50Y2hlY2tvdXQtbXZwLmhlcm9rdWFwcC5jb20vY2hlY2tvdXQiLCJpYXQiOjE2NzY3OTUzMzUsImV4cCI6MTY3Njg4MTczNSwiYXpwIjoiRVpVbWpITmdaTTFxUDh1UVhWUTB3dkpJaE8yd2pKWFAiLCJzY29wZSI6InJlYWQ6cGF5bWVudFNlc3Npb24iLCJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMifQ.B-TfwzLC08hmI8jAaR5xJqkh-eYFR8EyMgw75mxp--i0qobGKb4y8gykN_boqb4cHCAkJEFvdVEgp41rm_h2V4kAAj4hveiVmgvWQieUKXMVuIx_vP3RK6f-plvaB5naoK4YdFEtQsQTDtL6VmnMQQ-S4iXdNhSeunL9IIniEOWtebb3cTmAbkp-CSg-5YALCYdqj5OELm4jQj3htjs0pefB1dSLq7yVdAtvPn_FcLtLCaoug5_hUqvOGPFs6CxS6OajFiIHAbXzeHfXmapL_PW0SQz3X_aL9LKgupRU2G8LDkMPEH6YCMfvk6x_klqi_15d2rqVqY8wN2zObe2YkA`
             }
         });
         tokenConversionsList = tokensResponse.data;
@@ -199,10 +219,16 @@ export function SprintcheckoutDapp() {
     return (
         <>
             <Box display="flex" flexDirection="column">
+                {(!amount || !selectedCurrency || !tokenAmount || !pricesForAmountRounded) ?
+                    <Center>
+                        <Spinner thickness='2px' speed='0.65s'size="xl" color="blue.500" />
+                    </Center> : null
+                }
 
-                <Center border='1px' borderColor='gray.200' borderRadius="12px" minWidth="375px" maxWidth="400px"
+                {amount && selectedCurrency && tokenAmount && pricesForAmountRounded && (
+                <Center border='1px' borderColor='gray.200' borderRadius="12px" maxWidth="400px"
                         margin={"0 auto"}>
-                    <TableContainer>
+                     <TableContainer>
                         <Table variant='simple'>
                             <Thead>
                                 <Tr>
@@ -234,6 +260,9 @@ export function SprintcheckoutDapp() {
                         </Table>
                     </TableContainer>
                 </Center>
+                )}
+
+                {amount && selectedCurrency && tokenAmount && pricesForAmountRounded && (
                 <Center marginTop={3}>
                     <Text color="#718096" fontSize={13} mr={1}>
                         {tokenConversionRate} {selectedToken} per {selectedCurrency} (No hidden fees{' '}
@@ -241,18 +270,17 @@ export function SprintcheckoutDapp() {
                     <Text color="#718096" fontSize={13}>
                         <Link href='https://www.coingecko.com/' textDecor="underline">Coingecko)</Link>
                     </Text>
-
                 </Center>
+                )}
 
                 {/*TODO: Check why Connect Button is not changing address when changing MetaMask account (see wagmin template and check it works)*/}
-                <Center alignContent="center" marginTop="15px" marginBottom="30px">
+                <Center alignContent="center" marginTop={10} marginBottom="30px">
                     <ConnectButton accountStatus={"address"} chainStatus="name" showBalance={false}/>
                 </Center>
 
                 {isConnected ?
-                    <Center alignContent="center" width="100%" marginTop="15px" paddingBottom={10}>
-                        <ProcessPayment isConnected={isConnected} merchantAmount={tokenAmount} spcFee={tokenAmount}
-                                        orderId={orderId} merchantId={merchantId}/>
+                    <Center alignContent="center" width="100%" paddingBottom={8}>
+                        <ProcessPayment isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId} merchantId={merchantId} selectedToken={selectedToken}/>
                     </Center> : null}
 
                 {/* TODO add icons and links */}
