@@ -48,10 +48,7 @@ let authResponse: AxiosResponse;
 export function SprintcheckoutDapp() {
 
     let paymentSessionId: string;
-    // let merchantId: string;
-    // let orderId: string;
     let currency: string;
-    let successUrl: string;
     let failUrl: string;
     let cancelUrl: string;
     let token: string;
@@ -78,6 +75,7 @@ export function SprintcheckoutDapp() {
     const [tokenAmount, setTokenAmount] = useState<string | undefined>("");
     const [orderId, setOrderId] = useState<string | undefined>("");
     const [merchantId, setMerchantId] = useState<string | undefined>("");
+    const [successUrl, setSuccessUrl] = useState<string | undefined>("");
 
     const [tokenConversionRate, setTokenConversionRate] = useState<string | undefined>("");
     const [count, setCount] = useState(0);
@@ -88,10 +86,10 @@ export function SprintcheckoutDapp() {
 
         setMerchantId(paymentSession.data.merchantId);
         setOrderId(paymentSession.data.orderId);
-        currency = paymentSession.data.currency
-        successUrl = paymentSession.data.successUrl
-        failUrl = paymentSession.data.failUrl
-        cancelUrl = paymentSession.data.cancelUrl
+        currency = paymentSession.data.currency;
+        setSuccessUrl(paymentSession.data.successUrl);
+        failUrl = paymentSession.data.failUrl;
+        cancelUrl = paymentSession.data.cancelUrl;
 
         setAmount(paymentSession.data.amount);
         setSelectedCurrency(currency);
@@ -226,23 +224,23 @@ export function SprintcheckoutDapp() {
                 }
 
                 {amount && selectedCurrency && tokenAmount && pricesForAmountRounded && (
-                <Center border='1px' borderColor='gray.200' borderRadius="12px" maxWidth="400px"
+                <Center border='1px' borderColor='gray.200' borderRadius="12px" minWidth="310px" maxWidth="400px"
                         margin={"0 auto"}>
                      <TableContainer>
                         <Table variant='simple'>
                             <Thead>
                                 <Tr>
-                                    <Th isNumeric>AMOUNT</Th>
+                                    <Th>AMOUNT</Th>
                                     <Th>CURRENCY</Th>
                                 </Tr>
                             </Thead>
                             <Tbody>
                                 <Tr>
-                                    <Td isNumeric>{amount}</Td>
+                                    <Td>{amount}</Td>
                                     <Td>{selectedCurrency}</Td>
                                 </Tr>
                                 <Tr>
-                                    <Td fontWeight={"bold"} color="#3182CE" isNumeric>{tokenAmount}</Td>
+                                    <Td alignContent={"left"} fontWeight={"bold"} color="#3182CE">{tokenAmount}</Td>
                                     <Td>
                                         <Select style={{ fontWeight: 'bold' }} color={"#3182CE"} borderRadius="20px" onChange={onChangeSendTokenAndConversion}>
                                             {pricesForAmountRounded?.map((elem, index) => {
@@ -273,7 +271,7 @@ export function SprintcheckoutDapp() {
                 </Center>
                 )}
 
-                {/*TODO: Check why Connect Button is not changing address when changing MetaMask account (see wagmin template and check it works)*/}
+                {/*TODO: Connect Button should refresh the Approve/Pay buttons in our component when changing Metamask address */}
                 <Center alignContent="center" marginTop={10} marginBottom="30px">
                     <ConnectButton accountStatus={"address"} chainStatus="name" showBalance={false}/>
                 </Center>
@@ -281,7 +279,7 @@ export function SprintcheckoutDapp() {
 
         {isConnected ?
 
-                <ProcessPayment isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId} merchantId={merchantId} selectedToken={selectedToken}/> : null
+                <ProcessPayment isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId} merchantId={merchantId} selectedToken={selectedToken} successUrl={successUrl}/> : null
         }
 
                 {/* TODO add icons and links */}

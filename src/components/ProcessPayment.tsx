@@ -8,12 +8,26 @@ import ERC20_CONTRACT_ABI from "../resources/abis/erctokenabi.json";
 import {BigNumber} from "ethers";
 import axios, {AxiosResponse} from "axios";
 
+const SPRINTCHECKOUT_CONTRACT_ADDRESS = '0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807';
 const AUTH0_OAUTH_URL = 'https://dev-0p0zfam6.us.auth0.com/oauth/token';
 const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout';
 // const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout'; // TODO RESTORE
 const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
 const SPRINTCHECKOUT_FEE = 0.005;
 
+interface NetworkContract {
+    goerli: string;
+    mainnet: string;
+}
+
+const contractAddresses: Record<string, NetworkContract> = {
+    USDC: {goerli: "0x0faF6df7054946141266420b43783387A78d82A9", mainnet: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"}, // TODO review every token contract address and decimals** on mainnet and goerli
+    USDT: {goerli: "0x", mainnet: "0xdAC17F958D2ee523a2206206994597C13D831ec7"},
+    DAI: {goerli: "0x3e7676937A7E96CFB7616f255b9AD9FF47363D4b", mainnet: "0x6b175474e89094c44da98b954eedeac495271d0f"}, // TODO DAI decimals are not appropiate, fix
+    WBTC: {goerli: "0x", mainnet: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"},
+    WETH: { goerli: "0x", mainnet: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2" },
+    ETH: {goerli: "0x0000000000000000000000000000000000000000", mainnet: "0x0000000000000000000000000000000000000000"},
+};
 
 let authResponse: AxiosResponse;
 
@@ -24,11 +38,10 @@ interface MerchantOrder {
     receipts: Array<string>;
 }
 
-//TODO think about the component modeling and if this should be a good approach or what (SprintCheckoutDapp > ProcessPayment)
 // TODO: thinking also about extending to other chains (polygon) etc.
-export function ProcessPayment(props: { isConnected: boolean, merchantAmount: string | undefined, orderId: string | undefined, merchantId: string | undefined, selectedToken: string | undefined }) {
+export function ProcessPayment(props: { isConnected: boolean, merchantAmount: string | undefined, orderId: string | undefined,
+    merchantId: string | undefined, selectedToken: string | undefined, successUrl: string | undefined }) {
 
-    // const SPRINTCHECKOUT_CONTRACT_ADDRESS = '0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807';
     const [isConnected, setIsConnected] = useState(false);
     const [isBalanceEnough, setIsBalanceEnough] = useState(false);
     const [address, setAddress] = useState<string | undefined>("");
@@ -54,7 +67,6 @@ export function ProcessPayment(props: { isConnected: boolean, merchantAmount: st
         return authResponse;
     }
 
-    //TODO: how to invoke this function after txHash gets a value from contract interaction response?
     async function processReceiptAndRedirect(txHash: { hash: string; }, orderId: string, merchantId: string) {
         // const merchantOrder: MerchantOrder = {
         //         orderId: orderId,
@@ -70,33 +82,35 @@ export function ProcessPayment(props: { isConnected: boolean, merchantAmount: st
         //         }
         //     });
         //     console.log(resp.data);
-            window.location.replace("https://www.facilware.com");
+        props.successUrl && window.location.replace(props.successUrl);
 
     }
 
     /** ************************************************************************************************* **/
     /**                                         ALLOWANCE                                                 **/
     /** ************************************************************************************************* **/
+    console.log("props.selectedToken");
+    console.log(props.selectedToken);
     const {data: balance, isError, isLoading: allowanceLoading} = useContractRead({
-        address: '0x0faF6df7054946141266420b43783387A78d82A9',
+    // @ts-ignore
+        address: props.selectedToken && contractAddresses[props.selectedToken!]["goerli" as keyof NetworkContract],
         abi: ERC20_CONTRACT_ABI,
         functionName: 'allowance',
-        args: [address, "0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807"],
+        args: [address, SPRINTCHECKOUT_CONTRACT_ADDRESS],
         watch: true
     })
 
     /** ************************************************************************************************* **/
     /**                                         APPROVAL                                                  **/
     /** ************************************************************************************************* **/
-    const merchantAmountBigNumber = props.merchantAmount && (Math.round(Number(props.merchantAmount) * (10 ** 6)));
-    const spcFeeToPayBigNumber = props.merchantAmount && Math.round((Number(props.merchantAmount) * SPRINTCHECKOUT_FEE * (10 ** 6)));
-    const amountToPay = merchantAmountBigNumber && spcFeeToPayBigNumber && Number(merchantAmountBigNumber) + Number(spcFeeToPayBigNumber);
+    const highAmountForApproval = Number(1000) * (100 ** 2); // TODO this approves a high amount based on amount to pay, think about which number will be
 
     const {config: erc20ConfigApprove} = usePrepareContractWrite({
-        address: '0x0faF6df7054946141266420b43783387A78d82A9',
+    // @ts-ignore
+        address: props.selectedToken && contractAddresses[props.selectedToken!]["goerli" as keyof NetworkContract],
         abi: ERC20_CONTRACT_ABI,
         functionName: 'approve',
-        args: ["0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807", amountToPay]
+        args: [SPRINTCHECKOUT_CONTRACT_ADDRESS, highAmountForApproval]
     })
 
     const {
@@ -111,15 +125,20 @@ export function ProcessPayment(props: { isConnected: boolean, merchantAmount: st
     /** ************************************************************************************************* **/
     /**                                         TRANSFER FROM                                             **/
     /** ************************************************************************************************* **/
-        //TODO Move map with ERC20 token addresses and load the proper one here dinamically
+    //TODO Move map with ERC20 token addresses and load the proper one here dinamically
+    const merchantAmountBigNumber = props.merchantAmount && (Math.round(Number(props.merchantAmount) * (10 ** 6)));
+    const spcFeeToPayBigNumber = props.merchantAmount && Math.round((Number(props.merchantAmount) * SPRINTCHECKOUT_FEE * (10 ** 6)));
+    const amountToPay = merchantAmountBigNumber && spcFeeToPayBigNumber && Number(merchantAmountBigNumber) + Number(spcFeeToPayBigNumber);
+    const merchantAmountMinusSpcFee = merchantAmountBigNumber && spcFeeToPayBigNumber && Number(merchantAmountBigNumber) - Number(spcFeeToPayBigNumber);
+    //TODO estimate gas fee for the transfer from and do the maths to subtract it from the merchand and spc fee amounts
 
         // console.log(Number(merchantAmountBigNumber)! + Number(spcFeeToPayBigNumber!));
     const {config, error, isSuccess: configSuccess} = usePrepareContractWrite({
-            address: enablePayCall && merchantAmountBigNumber && spcFeeToPayBigNumber ? '0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807' : undefined,
+            address: enablePayCall && merchantAmountBigNumber && spcFeeToPayBigNumber ? SPRINTCHECKOUT_CONTRACT_ADDRESS : undefined,
             abi: SPRINTCHECKOUT_CONTRACT_ABI,
             functionName: 'transferFrom',
-            args: ['0x0faF6df7054946141266420b43783387A78d82A9', address, "0xA3B667ed1aff9243A14FA4c610B4f8e29D0C96e1", "0xAf1DD0F5dBebEc8c9c1c2a48aa79fB1D8E2DdA32",
-                merchantAmountBigNumber ? BigNumber.from(merchantAmountBigNumber.toString()).toNumber() : undefined, spcFeeToPayBigNumber ? BigNumber.from(spcFeeToPayBigNumber.toString()).toNumber() : undefined],
+            args: [props.selectedToken && contractAddresses[props.selectedToken!]["goerli" as keyof NetworkContract], address, "0xA3B667ed1aff9243A14FA4c610B4f8e29D0C96e1", "0xAf1DD0F5dBebEc8c9c1c2a48aa79fB1D8E2DdA32",
+                merchantAmountMinusSpcFee ? BigNumber.from(merchantAmountMinusSpcFee.toString()).toNumber() : undefined, spcFeeToPayBigNumber ? BigNumber.from(spcFeeToPayBigNumber.toString()).toNumber() : undefined],
         })
 
     const {data: txHash, isLoading, isSuccess, write: pay} = useContractWrite(config)
@@ -139,7 +158,6 @@ export function ProcessPayment(props: { isConnected: boolean, merchantAmount: st
     /****************************************************/
     /*                     USE EFFECT                   */
     /****************************************************/
-    //TODO: Why is everything being rendered several times, how to avoid it
     useEffect(() => {
         console.log("Inside Use Effect!");
         let account = getAccount();
@@ -165,11 +183,11 @@ export function ProcessPayment(props: { isConnected: boolean, merchantAmount: st
 
             setTimeout(function() {
                 processReceiptAndRedirect(txHash, "order", "merch")
-            }, 3000);
+            }, 4500);
         }
         // setOrderId(props.orderId!);
         // setMerchantId(props.merchantId!);
-    }, [props.isConnected, props.merchantAmount, address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash]);
+    }, [props.isConnected, props.merchantAmount, props.selectedToken, address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash]);
 
     /****************************************************/
     /*                    HTML - JXS                    */
@@ -177,9 +195,9 @@ export function ProcessPayment(props: { isConnected: boolean, merchantAmount: st
 
     return (
         <>
-            <Center paddingBottom={5}>
-                {/* TODO: dev purposes for seeing the content: {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
-                {/*{isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
+            <Center paddingBottom={"40px"}>
+                {/* dev purposes for seeing the content: {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
+                {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}
                 {(isConnected && !isBalanceEnough && !txUrl) ?
                     (isApproveLoading && (!isApproveSuccess || !isBalanceEnough) || (isApproveSuccess && !isBalanceEnough)) ?
                         <Spinner thickness='2px' speed='0.65s' size="xl" color="blue.500"/> :
