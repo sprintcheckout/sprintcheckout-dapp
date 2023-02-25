@@ -125,7 +125,7 @@ export function ProcessPayment(props: { isConnected: boolean, merchantAmount: st
     /** ************************************************************************************************* **/
     /**                                         TRANSFER FROM                                             **/
     /** ************************************************************************************************* **/
-    //TODO Move map with ERC20 token addresses and load the proper one here dinamically
+    //TODO Take into account ERC20 decimals for the transfer from operation
     const merchantAmountBigNumber = props.merchantAmount && (Math.round(Number(props.merchantAmount) * (10 ** 6)));
     const spcFeeToPayBigNumber = props.merchantAmount && Math.round((Number(props.merchantAmount) * SPRINTCHECKOUT_FEE * (10 ** 6)));
     const amountToPay = merchantAmountBigNumber && spcFeeToPayBigNumber && Number(merchantAmountBigNumber) + Number(spcFeeToPayBigNumber);
@@ -197,7 +197,7 @@ export function ProcessPayment(props: { isConnected: boolean, merchantAmount: st
         <>
             <Center paddingBottom={"40px"}>
                 {/* dev purposes for seeing the content: {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
-                {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}
+                {/*{isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
                 {(isConnected && !isBalanceEnough && !txUrl) ?
                     (isApproveLoading && (!isApproveSuccess || !isBalanceEnough) || (isApproveSuccess && !isBalanceEnough)) ?
                         <Spinner thickness='2px' speed='0.65s' size="xl" color="blue.500"/> :
