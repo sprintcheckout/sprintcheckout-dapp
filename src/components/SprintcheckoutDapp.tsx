@@ -21,8 +21,8 @@ import {ProcessPayment} from "./ProcessPayment";
 import {ConnectButton} from "@rainbow-me/rainbowkit";
 
 const AUTH0_OAUTH_URL = 'https://dev-0p0zfam6.us.auth0.com/oauth/token';
-// const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';// TODO RESTORE
-const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout';
+const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
+//const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
 const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
 
 interface IHash {
