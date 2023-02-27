@@ -6,7 +6,7 @@ import {WagmiConfig} from 'wagmi'
 
 import {App} from './App'
 import {chains, client} from './wagmi'
-import {ChakraProvider, CSSReset, extendTheme} from "@chakra-ui/react";
+import {ChakraProvider, extendTheme} from "@chakra-ui/react";
 
 const customTheme = extendTheme({
     styles: {
