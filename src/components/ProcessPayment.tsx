@@ -100,9 +100,6 @@ export function ProcessPayment(props: {
     /** ************************************************************************************************* **/
     /**                                         ALLOWANCE                                                 **/
     /** ************************************************************************************************* **/
-    console.log("props.selectedToken");
-    console.log(props.selectedToken);
-
     const {data: balance, isError, isLoading: allowanceLoading} = useContractRead({
         // @ts-ignore
         address: props.selectedToken && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract], //TODO check that network changes when rainbowkit button changes network
@@ -137,17 +134,13 @@ export function ProcessPayment(props: {
     /** ************************************************************************************************* **/
     /**                                         TRANSFER FROM                                             **/
     /** ************************************************************************************************* **/
-    console.log("contractAddresses[props.selectedToken!][mainnet as keyof NetworkContract]");
-    chain && console.log(contractAddresses[props.selectedToken!][chain.id as keyof NetworkContract]);
-
     //TODO Take into account ERC20 decimals for the transfer from operation
     const merchantAmountBigNumber = props.merchantAmount && (Math.round(Number(props.merchantAmount) * (10 ** 6)));
     const spcFeeToPayBigNumber = props.merchantAmount && Math.round((Number(props.merchantAmount) * SPRINTCHECKOUT_FEE * (10 ** 6)));
     const amountToPay = merchantAmountBigNumber && spcFeeToPayBigNumber && Number(merchantAmountBigNumber) + Number(spcFeeToPayBigNumber);
     const merchantAmountMinusSpcFee = merchantAmountBigNumber && spcFeeToPayBigNumber && Number(merchantAmountBigNumber) - Number(spcFeeToPayBigNumber);
-    //TODO estimate gas fee for the transfer from and do the maths to subtract it from the merchand and spc fee amounts
+    //TODO estimate gas fee for the transfer from and do the maths to subtract it from the merchant and spc fee amounts
 
-    // console.log(Number(merchantAmountBigNumber)! + Number(spcFeeToPayBigNumber!));
     const {config, error, isSuccess: configSuccess} = usePrepareContractWrite({
         address: enablePayCall && merchantAmountBigNumber && spcFeeToPayBigNumber ? SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_MAINNET : undefined,
         abi: SPRINTCHECKOUT_CONTRACT_ABI,
@@ -163,7 +156,6 @@ export function ProcessPayment(props: {
     }
 
     const calculateIsBalanceEnough = (balance: any, amountToPay: number): boolean => {
-        console.log("Balance = " + balance);
         if (balance >= amountToPay) {
             return true;
         }
@@ -174,25 +166,13 @@ export function ProcessPayment(props: {
     /*                     USE EFFECT                   */
     /****************************************************/
     useEffect(() => {
-        console.log("Inside Use Effect!");
         let account = getAccount();
         setAddress(account.address);
         setIsConnected(props.isConnected);
-        console.log("approve loading");
-        console.log(isApproveLoading);
-        console.log("is approve success");
-        console.log(isApproveSuccess);
         setIsBalanceEnough(calculateIsBalanceEnough(balance, Number(amountToPay)));
         if (isApproveSuccess && isBalanceEnough && !isApproveLoading) {
             reset();
         }
-        console.log("isBalanceEnough");
-        console.log(isBalanceEnough);
-        console.log("approveStatus");
-        console.log(approveStatus);
-
-        console.log("txHash?.hash");
-        console.log(txHash?.hash);
         if (txHash) {
             setTxUrl("https://goerli.explorer.zksync.io/tx/" + txHash?.hash);
 
