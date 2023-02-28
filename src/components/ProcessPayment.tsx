@@ -7,13 +7,13 @@ import { useNetwork } from 'wagmi'
 import SPRINTCHECKOUT_CONTRACT_ABI from "../resources/abis/abi.json";
 import ERC20_CONTRACT_ABI from "../resources/abis/erctokenabi.json";
 import {BigNumber} from "ethers";
-import {AxiosResponse} from "axios";
+import axios, {AxiosResponse} from "axios";
 
 const SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_GOERLI = '0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807'; // GOERLI ADDRESS
 const SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_MAINNET = '0x2bf81700C523E4E95a4FF0214b933348BAaA09eF'; // MAINNET ADDRESS
 //TODO switch between networks when selecting the network in the rainbowkit connect button
 const AUTH0_OAUTH_URL = 'https://dev-0p0zfam6.us.auth0.com/oauth/token';
-// const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
+//const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
 const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
 const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
 const SPRINTCHECKOUT_FEE = 0.005;
@@ -34,6 +34,15 @@ const contractAddresses: Record<string, NetworkContract> = {
     WETH: {280: "0x", 324: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"},
     ETH: {280: "0x0000000000000000000000000000000000000000", 324: "0x0000000000000000000000000000000000000000"},
 };
+
+interface IHash {
+    [details: number]: string;
+}
+
+let sprintcheckoutContractAddressByNetwork: IHash = {};
+sprintcheckoutContractAddressByNetwork[280] = SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_GOERLI;
+sprintcheckoutContractAddressByNetwork[324] = SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_MAINNET;
+
 
 let authResponse: AxiosResponse;
 
@@ -65,15 +74,14 @@ export function ProcessPayment(props: {
 
     async function getAuth0Token() {
 
-        if (!authResponse) {
+        if (!authResponse) { //TODO think about passing the token from the SprintcheckoutDapp component
             console.log("Regenerating authResponse (QUOTA!)")
-            // let authBody = '{"client_id":"' + import.meta.env.VITE_AUTH0_CLIENT_ID + '","client_secret":"' + import.meta.env.VITE_AUTH0_CLIENT_SECRET + '","audience":"' + SPRINTCHECKOUT_BASE_URL + '","grant_type":"client_credentials"}'
-            // authResponse = await axios.post(AUTH0_OAUTH_URL, authBody, {
-            //     headers: {
-            //         'content-type': `application/json`
-            //     }
-            // });
-            authResponse = {config: {}, data: undefined, headers: undefined, status: 0, statusText: ""};
+            let authBody = '{"client_id":"' + import.meta.env.VITE_AUTH0_CLIENT_ID + '","client_secret":"' + import.meta.env.VITE_AUTH0_CLIENT_SECRET + '","audience":"' + SPRINTCHECKOUT_BASE_URL + '","grant_type":"client_credentials"}'
+            authResponse = await axios.post(AUTH0_OAUTH_URL, authBody, {
+                headers: {
+                    'content-type': `application/json`
+                }
+            });
         }
         return authResponse;
     }
@@ -105,7 +113,7 @@ export function ProcessPayment(props: {
         address: props.selectedToken && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract], //TODO check that network changes when rainbowkit button changes network
         abi: ERC20_CONTRACT_ABI,
         functionName: 'allowance',
-        args: [address, SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_MAINNET],
+        args: [address, chain && sprintcheckoutContractAddressByNetwork[chain?.id]],
         watch: true
     })
 
@@ -119,7 +127,7 @@ export function ProcessPayment(props: {
         address: props.selectedToken && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract],
         abi: ERC20_CONTRACT_ABI,
         functionName: 'approve',
-        args: [SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_MAINNET, highAmountForApproval]
+        args: [chain && sprintcheckoutContractAddressByNetwork[chain?.id], highAmountForApproval]
     })
 
     const {
@@ -141,13 +149,22 @@ export function ProcessPayment(props: {
     const merchantAmountMinusSpcFee = merchantAmountBigNumber && spcFeeToPayBigNumber && Number(merchantAmountBigNumber) - Number(spcFeeToPayBigNumber);
     //TODO estimate gas fee for the transfer from and do the maths to subtract it from the merchant and spc fee amounts
 
+    //TODO create a debug function
+    // console.log("Selected token: " + props.selectedToken);
+    // console.log("Selected chain id: " + chain?.id);
+    // props.selectedToken && chain && console.log("Contract loaded based on chain: " + contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract]);
+    // merchantAmountMinusSpcFee && console.log("Merchant minus fee:" + merchantAmountMinusSpcFee);
+    // spcFeeToPayBigNumber && console.log("SPC fee:" + spcFeeToPayBigNumber);
+
     const {config, error, isSuccess: configSuccess} = usePrepareContractWrite({
-        address: enablePayCall && merchantAmountBigNumber && spcFeeToPayBigNumber ? SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_MAINNET : undefined,
+        // @ts-ignore
+        address: chain && enablePayCall && merchantAmountBigNumber && spcFeeToPayBigNumber ? sprintcheckoutContractAddressByNetwork[chain?.id] : undefined,
         abi: SPRINTCHECKOUT_CONTRACT_ABI,
         functionName: 'transferFrom',
         args: [props.selectedToken && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract], address, "0xA3B667ed1aff9243A14FA4c610B4f8e29D0C96e1", "0xAf1DD0F5dBebEc8c9c1c2a48aa79fB1D8E2DdA32",
             merchantAmountMinusSpcFee ? BigNumber.from(merchantAmountMinusSpcFee.toString()).toNumber() : undefined, spcFeeToPayBigNumber ? BigNumber.from(spcFeeToPayBigNumber.toString()).toNumber() : undefined],
     })
+
 
     const {data: txHash, isLoading, isSuccess, write: pay} = useContractWrite(config)
     if (enablePayCall && configSuccess) {
@@ -193,7 +210,7 @@ export function ProcessPayment(props: {
             {props.selectedToken != 'ETH' ?
                 <Center paddingBottom={"40px"}>
                     {/* dev purposes for seeing the content: {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
-                    {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}
+                    {/*{isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
                     {(isConnected && !isBalanceEnough && !txUrl) ?
                         (isApproveLoading && (!isApproveSuccess || !isBalanceEnough) || (isApproveSuccess && !isBalanceEnough)) ?
                             <Spinner thickness='2px' speed='0.65s' size="xl" color="blue.500"/> :

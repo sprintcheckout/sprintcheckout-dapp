@@ -67,7 +67,6 @@ export function SprintcheckoutDapp() {
     tokenRoundDecimals["WBTC"] = 6;
 
     const {address} = useAccount()
-    const {data: ensName} = useEnsName({address})
     const [selectedToken, setSelectedToken] = useState<string | undefined>("");
     const [selectedCurrency, setSelectedCurrency] = useState<string | undefined>("");
     const [amount, setAmount] = useState<string | undefined>("");
@@ -78,7 +77,6 @@ export function SprintcheckoutDapp() {
     const [cancelUrl, setCancelUrl] = useState<string | undefined>("");
 
     const [tokenConversionRate, setTokenConversionRate] = useState<string | undefined>("");
-    const [count, setCount] = useState(0);
     const {isConnected} = useAccount()
 
 
@@ -121,7 +119,7 @@ export function SprintcheckoutDapp() {
         let authResponse = await getAuth0Token();
         let paymentSettingsResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_settings/' + merchantId, {
             headers: {
-                // 'Authorization': `Bearer ${authResponse.data.access_token}` // TODO restore
+                'Authorization': `Bearer ${authResponse.data.access_token}`
             }
         });
         return paymentSettingsResponse;
@@ -129,15 +127,13 @@ export function SprintcheckoutDapp() {
 
     async function getAuth0Token() {
         if (!authResponse) {
-            // TODO RESTORE
-            // let authBody = '{"client_id":"' + import.meta.env.VITE_AUTH0_CLIENT_ID + '","client_secret":"' + import.meta.env.VITE_AUTH0_CLIENT_SECRET + '","audience":"' + SPRINTCHECKOUT_BASE_URL + '","grant_type":"client_credentials"}'
-            // authResponse = await axios.post(AUTH0_OAUTH_URL, authBody, {
-            //     headers: {
-            //         'content-type': `application/json`
-            //     }
-            // });
+            let authBody = '{"client_id":"' + import.meta.env.VITE_AUTH0_CLIENT_ID + '","client_secret":"' + import.meta.env.VITE_AUTH0_CLIENT_SECRET + '","audience":"' + SPRINTCHECKOUT_BASE_URL + '","grant_type":"client_credentials"}'
+            authResponse = await axios.post(AUTH0_OAUTH_URL, authBody, {
+                headers: {
+                    'content-type': `application/json`
+                }
+            });
         }
-        authResponse = {config: {}, data: undefined, headers: undefined, status: 0, statusText: ""};
 
         return authResponse;
     }
@@ -147,7 +143,7 @@ export function SprintcheckoutDapp() {
         let authResponse = await getAuth0Token();
         let paymentSessionResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/' + id, {
             headers: {
-                // 'Authorization': `Bearer ${authResponse.data.access_token}` // TODO restore
+                'Authorization': `Bearer ${authResponse.data.access_token}` // TODO restore
             }
         });
         return paymentSessionResponse;
@@ -156,11 +152,9 @@ export function SprintcheckoutDapp() {
     async function getTokenConversion(id: string) {
 
         let authResponse = await getAuth0Token();
-        // let tokensResponse = await axios.get('http://localhost:8080/payment_session/token_conversions/' + id, {
         let tokensResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/token_conversions/' + id, {
             headers: {
-                // 'Authorization': `Bearer ${authResponse.data.access_token}` // TODO restore
-                'Authorization': `Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjR5LTl6am1MYldIZV84MGhoVEMydyJ9.eyJpc3MiOiJodHRwczovL2Rldi0wcDB6ZmFtNi51cy5hdXRoMC5jb20vIiwic3ViIjoiRVpVbWpITmdaTTFxUDh1UVhWUTB3dkpJaE8yd2pKWFBAY2xpZW50cyIsImF1ZCI6Imh0dHBzOi8vc3ByaW50Y2hlY2tvdXQtbXZwLmhlcm9rdWFwcC5jb20vY2hlY2tvdXQiLCJpYXQiOjE2NzY3OTUzMzUsImV4cCI6MTY3Njg4MTczNSwiYXpwIjoiRVpVbWpITmdaTTFxUDh1UVhWUTB3dkpJaE8yd2pKWFAiLCJzY29wZSI6InJlYWQ6cGF5bWVudFNlc3Npb24iLCJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMifQ.B-TfwzLC08hmI8jAaR5xJqkh-eYFR8EyMgw75mxp--i0qobGKb4y8gykN_boqb4cHCAkJEFvdVEgp41rm_h2V4kAAj4hveiVmgvWQieUKXMVuIx_vP3RK6f-plvaB5naoK4YdFEtQsQTDtL6VmnMQQ-S4iXdNhSeunL9IIniEOWtebb3cTmAbkp-CSg-5YALCYdqj5OELm4jQj3htjs0pefB1dSLq7yVdAtvPn_FcLtLCaoug5_hUqvOGPFs6CxS6OajFiIHAbXzeHfXmapL_PW0SQz3X_aL9LKgupRU2G8LDkMPEH6YCMfvk6x_klqi_15d2rqVqY8wN2zObe2YkA`
+                'Authorization': `Bearer ${authResponse.data.access_token}` // TODO restore
             }
         });
         tokenConversionsList = tokensResponse.data;
