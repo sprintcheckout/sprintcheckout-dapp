@@ -20,7 +20,6 @@ import axios, {AxiosResponse} from "axios";
 import {ProcessPayment} from "./ProcessPayment";
 import {ConnectButton} from "@rainbow-me/rainbowkit";
 
-const AUTH0_OAUTH_URL = 'https://dev-0p0zfam6.us.auth0.com/oauth/token';
 const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
 //const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
 const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
@@ -116,47 +115,18 @@ export function SprintcheckoutDapp() {
 
     async function getMerchantPaymentSettings(merchantId: string) {
 
-        let authResponse = await getAuth0Token();
-        let paymentSettingsResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_settings/' + merchantId, {
-            headers: {
-                'Authorization': `Bearer ${authResponse.data.access_token}`
-            }
-        });
+        let paymentSettingsResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_settings/' + merchantId);
         return paymentSettingsResponse;
-    }
-
-    async function getAuth0Token() {
-        if (!authResponse) {
-            let authBody = '{"client_id":"' + import.meta.env.VITE_AUTH0_CLIENT_ID + '","client_secret":"' + import.meta.env.VITE_AUTH0_CLIENT_SECRET + '","audience":"' + SPRINTCHECKOUT_BASE_URL + '","grant_type":"client_credentials"}'
-            authResponse = await axios.post(AUTH0_OAUTH_URL, authBody, {
-                headers: {
-                    'content-type': `application/json`
-                }
-            });
-        }
-
-        return authResponse;
     }
 
     async function getPaymentSession(id: string) {
 
-        let authResponse = await getAuth0Token();
-        let paymentSessionResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/' + id, {
-            headers: {
-                'Authorization': `Bearer ${authResponse.data.access_token}` // TODO restore
-            }
-        });
-        return paymentSessionResponse;
+        return await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/' + id);
     }
 
     async function getTokenConversion(id: string) {
 
-        let authResponse = await getAuth0Token();
-        let tokensResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/token_conversions/' + id, {
-            headers: {
-                'Authorization': `Bearer ${authResponse.data.access_token}` // TODO restore
-            }
-        });
+        let tokensResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/token_conversions/' + id);
         tokenConversionsList = tokensResponse.data;
         let pricesForAmount = tokenConversionsList?.tokenPricesForAmount;
         pricesForAmountRounded = pricesForAmount?.map((obj: { symbol: string; conversion: number; }) => {

@@ -12,7 +12,6 @@ import axios, {AxiosResponse} from "axios";
 const SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_GOERLI = '0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807'; // GOERLI ADDRESS
 const SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_MAINNET = '0x2bf81700C523E4E95a4FF0214b933348BAaA09eF'; // MAINNET ADDRESS
 //TODO switch between networks when selecting the network in the rainbowkit connect button
-const AUTH0_OAUTH_URL = 'https://dev-0p0zfam6.us.auth0.com/oauth/token';
 //const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
 const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
 const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
@@ -72,21 +71,8 @@ export function ProcessPayment(props: {
     const [enablePayCall, setEnablePayCall] = useState(false);
 
 
-    async function getAuth0Token() {
-
-        if (!authResponse) { //TODO think about passing the token from the SprintcheckoutDapp component
-            console.log("Regenerating authResponse (QUOTA!)")
-            let authBody = '{"client_id":"' + import.meta.env.VITE_AUTH0_CLIENT_ID + '","client_secret":"' + import.meta.env.VITE_AUTH0_CLIENT_SECRET + '","audience":"' + SPRINTCHECKOUT_BASE_URL + '","grant_type":"client_credentials"}'
-            authResponse = await axios.post(AUTH0_OAUTH_URL, authBody, {
-                headers: {
-                    'content-type': `application/json`
-                }
-            });
-        }
-        return authResponse;
-    }
-
     async function processReceiptAndRedirect(txHash: { hash: string; }, orderId: string, merchantId: string) {
+        //TODO check how to see that the header origin is the dApp in the backend to allow the process receipt
         // const merchantOrder: MerchantOrder = {
         //         orderId: orderId,
         //         merchantId: merchantId,
