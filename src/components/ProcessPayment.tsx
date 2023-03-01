@@ -106,7 +106,7 @@ export function ProcessPayment(props: {
     /** ************************************************************************************************* **/
     /**                                         APPROVAL                                                  **/
     /** ************************************************************************************************* **/
-    const highAmountForApproval = Number(100000) * (100 ** 2); // TODO this approves a high amount based on amount to pay, think about which number will be
+    const highAmountForApproval = Number(1000000) * (100 ** 2); // TODO this approves a high amount based on amount to pay, think about which number will be
 
     const {config: erc20ConfigApprove} = usePrepareContractWrite({
         // @ts-ignore
