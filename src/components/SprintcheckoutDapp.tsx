@@ -107,8 +107,13 @@ export function SprintcheckoutDapp() {
                     networkFromBackend = paymentSettings.data.layer.network;
                     merchantPublicAddress = paymentSettings.data.layer.publicAddress;
                 });
-            });
-            getTokenConversion(paymentSessionId)
+                getTokenConversion(paymentSessionId)
+            })
+                .catch(err => {
+                    console.log("Payment Session error: " + err);
+                    setSessionNotFound(true);
+                });
+
         } else {
             setSessionNotFound(true);
         }
