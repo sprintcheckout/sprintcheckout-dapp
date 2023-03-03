@@ -11,7 +11,6 @@ import axios, {AxiosResponse} from "axios";
 
 const SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_GOERLI = '0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807'; // GOERLI ADDRESS
 const SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_MAINNET = '0x2bf81700C523E4E95a4FF0214b933348BAaA09eF'; // MAINNET ADDRESS
-//TODO switch between networks when selecting the network in the rainbowkit connect button
 //const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
 const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
 const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
@@ -53,10 +52,9 @@ interface MerchantOrder {
 }
 
 
-
 // TODO: thinking also about extending to other chains (polygon) etc.
 export function ProcessPayment(props: {
-    isConnected: boolean, merchantAmount: string | undefined, orderId: string | undefined,
+    sessionNotFound: boolean, isConnected: boolean, merchantAmount: string | undefined, orderId: string | undefined,
     merchantId: string | undefined, selectedToken: string | undefined, successUrl: string | undefined
 }) {
 
@@ -96,7 +94,7 @@ export function ProcessPayment(props: {
     /** ************************************************************************************************* **/
     const {data: balance, isError, isLoading: allowanceLoading} = useContractRead({
         // @ts-ignore
-        address: props.selectedToken && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract], //TODO check that network changes when rainbowkit button changes network
+        address: props.selectedToken && props.selectedToken != 'ETH' && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract], //TODO check that network changes when rainbowkit button changes network
         abi: ERC20_CONTRACT_ABI,
         functionName: 'allowance',
         args: [address, chain && sprintcheckoutContractAddressByNetwork[chain?.id]],
@@ -110,7 +108,7 @@ export function ProcessPayment(props: {
 
     const {config: erc20ConfigApprove} = usePrepareContractWrite({
         // @ts-ignore
-        address: props.selectedToken && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract],
+        address: props.selectedToken && props.selectedToken != 'ETH' && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract],
         abi: ERC20_CONTRACT_ABI,
         functionName: 'approve',
         args: [chain && sprintcheckoutContractAddressByNetwork[chain?.id], highAmountForApproval]
@@ -185,7 +183,7 @@ export function ProcessPayment(props: {
         }
         // setOrderId(props.orderId!);
         // setMerchantId(props.merchantId!);
-    }, [props.isConnected, props.merchantAmount, props.selectedToken, address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash]);
+    }, [props.sessionNotFound, props.isConnected, props.merchantAmount, props.selectedToken, address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash]);
 
     /****************************************************/
     /*                    HTML - JXS                    */
@@ -193,7 +191,7 @@ export function ProcessPayment(props: {
 
     return (
         <>
-            {props.selectedToken != 'ETH' ?
+            {!props.sessionNotFound && props.selectedToken != 'ETH' ?
                 <Center paddingBottom={"40px"}>
                     {/* dev purposes for seeing the content: {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
                     {/*{isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
@@ -210,14 +208,14 @@ export function ProcessPayment(props: {
                     }
                 </Center> : null
             }
-            {props.selectedToken == 'ETH' ? // TODO think about refactoring
+            {!props.sessionNotFound && props.selectedToken == 'ETH' ? // TODO think about refactoring
                 <Center paddingBottom={"40px"}>
                     <Button color={"white"} backgroundColor="#0E76FD" onClick={() => setEnablePayCall(true)}>
                         Pay {props.merchantAmount} {props.selectedToken}
                     </Button>
                 </Center> : null
             }
-            {txUrl ?
+            {!props.sessionNotFound && txUrl ?
                 <Center>
                     <Alert
                         borderBottomRadius="10px"

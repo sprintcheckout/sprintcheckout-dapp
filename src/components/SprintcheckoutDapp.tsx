@@ -1,7 +1,9 @@
-import {useAccount, useEnsName} from 'wagmi'
+import {useAccount} from 'wagmi'
 import {
+    Alert,
+    AlertIcon,
     Box,
-    Center,
+    Center, Flex,
     Link,
     Select,
     Spinner,
@@ -74,6 +76,7 @@ export function SprintcheckoutDapp() {
     const [merchantId, setMerchantId] = useState<string | undefined>("");
     const [successUrl, setSuccessUrl] = useState<string | undefined>("");
     const [cancelUrl, setCancelUrl] = useState<string | undefined>("");
+    const [sessionNotFound, setSessionNotFound] = useState<boolean>(false);
 
     const [tokenConversionRate, setTokenConversionRate] = useState<string | undefined>("");
     const {isConnected} = useAccount()
@@ -97,8 +100,7 @@ export function SprintcheckoutDapp() {
         const params = new URLSearchParams(search);
         const paymentSessionIdB64 = params.get('uid');
         paymentSessionId = Buffer.from(paymentSessionIdB64 || '', "base64").toString();
-
-        if (paymentSessionId != null) {
+        if (paymentSessionId) {
             getPaymentSession(paymentSessionId).then(paymentSession => {
                 setDataFromPaymentSession(paymentSession);
                 getMerchantPaymentSettings(paymentSession.data.merchantId).then(paymentSettings => {
@@ -108,7 +110,7 @@ export function SprintcheckoutDapp() {
             });
             getTokenConversion(paymentSessionId)
         } else {
-
+            setSessionNotFound(true);
         }
 
     }, []);
@@ -194,12 +196,22 @@ export function SprintcheckoutDapp() {
                     </Box>
                 </Center>
                 {/*<Box display="flex" flexDirection="column">*/}
-                {(!amount || !selectedCurrency || !tokenAmount || !pricesForAmountRounded) ?
+                {(!sessionNotFound && (!amount || !selectedCurrency || !tokenAmount || !pricesForAmountRounded)) ?
                     <Center>
                         <Spinner thickness='2px' speed='0.65s' size="xl" color="blue.500"/>
                     </Center> : null
                 }
-
+                { sessionNotFound?
+                    <Flex alignContent={"center"} justifyContent={"center"}>
+                        <Center>
+                            <Alert status='warning' borderRadius="15px" alignContent={"center"}>
+                                <AlertIcon />
+                                Seems that you don't have a valid session id
+                            </Alert>
+                        </Center>
+                    </Flex>
+                    : null
+                }
                 {amount && selectedCurrency && tokenAmount && pricesForAmountRounded && (
                     <Center border='1px' borderColor='gray.200' borderRadius="12px" minWidth="310px" maxWidth="400px"
                             margin={"0 auto"}>
@@ -257,7 +269,7 @@ export function SprintcheckoutDapp() {
 
                 {isConnected ?
 
-                    <ProcessPayment isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId}
+                    <ProcessPayment sessionNotFound={sessionNotFound} isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId}
                                     merchantId={merchantId} selectedToken={selectedToken}
                                     successUrl={successUrl}/> : null
                 }
