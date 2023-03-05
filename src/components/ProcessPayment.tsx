@@ -94,7 +94,7 @@ export function ProcessPayment(props: {
     /** ************************************************************************************************* **/
     const {data: balance, isError, isLoading: allowanceLoading} = useContractRead({
         // @ts-ignore
-        address: props.selectedToken && props.selectedToken != 'ETH' && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract], //TODO check that network changes when rainbowkit button changes network
+        address: props.selectedToken && props.selectedToken != 'ETH' && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract],
         abi: ERC20_CONTRACT_ABI,
         functionName: 'allowance',
         args: [address, chain && sprintcheckoutContractAddressByNetwork[chain?.id]],

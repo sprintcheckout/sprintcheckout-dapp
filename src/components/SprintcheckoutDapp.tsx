@@ -186,7 +186,15 @@ export function SprintcheckoutDapp() {
 
     return (
         <>
-            <Box bg={"white"} flexDirection="column" width="50vh" borderRadius="10px" margin="0 auto" marginTop={150}>
+            <Box flexDirection="column" width="50vh" borderRadius="10px" margin="0 auto">
+                <Flex justifyContent={"flex-end"}>
+                    <Text mt={2} color={"#F9F9F9"} fontSize={14}>
+                        <Link href='https://www.sprintcheckout.com/'>How it works?</Link>
+                    </Text>
+                </Flex>
+            </Box>
+            <Box bg={"white"} flexDirection="column" width="50vh" borderRadius="10px" margin="0 auto" marginTop={140}>
+
                 <Center marginTop="20px" marginBottom="20px">
                     <Box marginTop="45px" marginBottom={5}>
                         <svg width="283" height="37" viewBox="0 0 283 37" fill="none"
