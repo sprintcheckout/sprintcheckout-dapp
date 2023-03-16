@@ -50,10 +50,8 @@ export function SprintcheckoutDapp() {
 
     let paymentSessionId: string;
     let currency: string;
-    let failUrl: string;
     let token: string;
 
-    var merchantPublicAddress: string;
     let networkFromBackend: string;
     let tokenAmountToPay: number; // Amount to pay in the selected token
 
@@ -67,16 +65,18 @@ export function SprintcheckoutDapp() {
     tokenRoundDecimals["BTC"] = 6;
     tokenRoundDecimals["WBTC"] = 6;
 
-    const {address} = useAccount()
     const [selectedToken, setSelectedToken] = useState<string | undefined>("");
     const [selectedCurrency, setSelectedCurrency] = useState<string | undefined>("");
     const [amount, setAmount] = useState<string | undefined>("");
     const [tokenAmount, setTokenAmount] = useState<string | undefined>("");
     const [orderId, setOrderId] = useState<string | undefined>("");
     const [merchantId, setMerchantId] = useState<string | undefined>("");
+    const [merchantPublicAddress, setMerchantPublicAddress] = useState<string | undefined>("");
     const [successUrl, setSuccessUrl] = useState<string | undefined>("");
+    const [failUrl, setFailUrl] = useState<string | undefined>("");
     const [cancelUrl, setCancelUrl] = useState<string | undefined>("");
     const [sessionNotFound, setSessionNotFound] = useState<boolean>(false);
+    const [backendPaymentSessionId, setBackendPaymentSessionId] = useState<string>("");
 
     const [tokenConversionRate, setTokenConversionRate] = useState<string | undefined>("");
     const {isConnected} = useAccount()
@@ -88,7 +88,7 @@ export function SprintcheckoutDapp() {
         setOrderId(paymentSession.data.orderId);
         currency = paymentSession.data.currency;
         setSuccessUrl(paymentSession.data.successUrl);
-        failUrl = paymentSession.data.failUrl;
+        setFailUrl(paymentSession.data.failUrl);
         setCancelUrl(paymentSession.data.cancelUrl);
         setAmount(paymentSession.data.amount);
         setSelectedCurrency(currency);
@@ -101,11 +101,12 @@ export function SprintcheckoutDapp() {
         const paymentSessionIdB64 = params.get('uid');
         paymentSessionId = Buffer.from(paymentSessionIdB64 || '', "base64").toString();
         if (paymentSessionId) {
+            setBackendPaymentSessionId(paymentSessionId);
             getPaymentSession(paymentSessionId).then(paymentSession => {
                 setDataFromPaymentSession(paymentSession);
                 getMerchantPaymentSettings(paymentSession.data.merchantId).then(paymentSettings => {
                     networkFromBackend = paymentSettings.data.layer.network;
-                    merchantPublicAddress = paymentSettings.data.layer.publicAddress;
+                    setMerchantPublicAddress(paymentSettings.data.layer.publicAddress);
                 });
                 getTokenConversion(paymentSessionId)
             })
@@ -186,9 +187,9 @@ export function SprintcheckoutDapp() {
 
     return (
         <>
-            <Box flexDirection="column" width="50vh" borderRadius="10px" margin="0 auto">
+            <Box margin="0 auto">
                 <Flex justifyContent={"flex-end"}>
-                    <Text mt={2} color={"#F9F9F9"} fontSize={14}>
+                    <Text mt={2} mr={5} color={"#F9F9F9"} fontSize={14}>
                         <Link href='https://www.sprintcheckout.com/'>How it works?</Link>
                     </Text>
                 </Flex>
@@ -199,6 +200,7 @@ export function SprintcheckoutDapp() {
                     <Box marginTop="45px" marginBottom={5}>
                         <svg width="283" height="37" viewBox="0 0 283 37" fill="none"
                              xmlns="http://www.w3.org/2000/svg">
+                            <title id="sprintcheckoutLogo">The Sprintcheckout logo</title>
                             <path
                                 d="M275.765 16.1764C279.241 16.1764 282.059 13.3584 282.059 9.88225C282.059 6.40611 279.241 3.58813 275.765 3.58813C272.289 3.58813 269.471 6.40611 269.471 9.88225C269.471 13.3584 272.289 16.1764 275.765 16.1764Z"
                                 fill="#1576D8"/>
@@ -219,7 +221,7 @@ export function SprintcheckoutDapp() {
                         <Center>
                             <Alert status='warning' borderRadius="15px" alignContent={"center"}>
                                 <AlertIcon />
-                                Seems that you don't have a valid session id
+                                Seems that you don't have a valid payment session
                             </Alert>
                         </Center>
                     </Flex>
@@ -282,9 +284,9 @@ export function SprintcheckoutDapp() {
 
                 {isConnected ?
 
-                    <ProcessPayment sessionNotFound={sessionNotFound} isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId}
-                                    merchantId={merchantId} selectedToken={selectedToken}
-                                    successUrl={successUrl}/> : null
+                    <ProcessPayment backendPaymentSessionId={backendPaymentSessionId} sessionNotFound={sessionNotFound} isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId}
+                                    merchantId={merchantId} merchantPublicAddress={merchantPublicAddress} selectedToken={selectedToken}
+                                    successUrl={successUrl} failUrl={failUrl}/> : null
                 }
 
                 {/* TODO add icons and links */}

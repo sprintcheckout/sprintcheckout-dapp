@@ -24,6 +24,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     // <React.StrictMode>
         <ChakraProvider theme={customTheme}>
             <WagmiConfig client={client}>
+                {/*//TODO check how to inject conditionally what chains are being used in the rainbowkit button dropdown*/}
                 <RainbowKitProvider chains={chains}>
                     <App />
                 </RainbowKitProvider>
