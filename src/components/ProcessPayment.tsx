@@ -78,10 +78,6 @@ export function ProcessPayment(props: {
 
     async function processReceiptAndRedirect(txHash: { hash: string; }) {
         //TODO check how to see that the header origin is the dApp in the backend to allow the process receipt
-        // 1 send payment session id and tx hash
-        //   - in backend, get merchant address from sesion id
-        //   - get transaction from web3j in backend by using tx hash
-        //      - check that the web3j tx object has the merchant Address in the 'to' field
 
         setIsTxBeingValidated(true);
         const merchantOrder: MerchantOrder = {
@@ -95,7 +91,9 @@ export function ProcessPayment(props: {
         if (resp.status == 200) {
             setIsTxBeingValidated(false);
             setIsTxValid(true);
-            props.successUrl && window.location.replace(props.successUrl);
+            setTimeout(() => {
+                props.successUrl && window.location.replace(props.successUrl);
+            }, 3000);
         } else {
             setIsTxInvalid(true);
             props.failUrl && window.location.replace(props.failUrl);
