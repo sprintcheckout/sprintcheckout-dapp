@@ -52,7 +52,6 @@ export function SprintcheckoutDapp() {
     let currency: string;
     let token: string;
 
-    let networkFromBackend: string;
     let tokenAmountToPay: number; // Amount to pay in the selected token
 
     let tokenRoundDecimals: IHash = {};
@@ -105,8 +104,7 @@ export function SprintcheckoutDapp() {
             getPaymentSession(paymentSessionId).then(paymentSession => {
                 setDataFromPaymentSession(paymentSession);
                 getMerchantPaymentSettings(paymentSession.data.merchantId).then(paymentSettings => {
-                    networkFromBackend = paymentSettings.data.layer.network;
-                    setMerchantPublicAddress(paymentSettings.data.layer.publicAddress);
+                    setMerchantPublicAddress(paymentSettings.data.chains[0].publicAddress);
                 });
                 getTokenConversion(paymentSessionId)
             })

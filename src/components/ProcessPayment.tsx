@@ -10,6 +10,7 @@ import SPRINTCHECKOUT_CONTRACT_ABI from "../resources/abis/abi.json";
 import ERC20_CONTRACT_ABI from "../resources/abis/erctokenabi.json";
 import {BigNumber} from "ethers";
 import axios, {AxiosResponse} from "axios";
+import {useWhatChanged} from "@simbathesailor/use-what-changed";
 
 const SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_GOERLI = '0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807'; // GOERLI ADDRESS
 const SPRINTCHECKOUT_POLYGON_CONTRACT_ADDRESS_MUMBAI = '0x3D28aCb2aCCF54FcD37f718Ea58dD780aCD2927d'; // POLYGON MUMBAI ADDRESS
@@ -25,18 +26,19 @@ interface NetworkContract {
     280: string;
     324: string;
     80001: string;
+    534353: string;
 }
 
 // 280 (goerli a.k.a zkSyncTestnet) and 324 (mainet a.k.a zkSync) are the ZkSync assigned ids
 // -> https://github.com/wagmi-dev/references/blob/df936de6d27b86fe8e7bad0dfa80e0810c0bcbd0/packages/chains/src/zkSync.ts#L4
 // -> https://github.com/wagmi-dev/references/blob/df936de6d27b86fe8e7bad0dfa80e0810c0bcbd0/packages/chains/src/zkSyncTestnet.ts#L4
 const contractAddresses: Record<string, NetworkContract> = {
-    USDC: {280: "0x0faF6df7054946141266420b43783387A78d82A9", 324: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", 80001: "0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747"}, // TODO review every token contract address and decimals** on mainnet and goerli
-    USDT: {280: "0x", 324: "0xdAC17F958D2ee523a2206206994597C13D831ec7", 80001: "0x"},
-    DAI: {280: "0x3e7676937A7E96CFB7616f255b9AD9FF47363D4b", 324: "0x6b175474e89094c44da98b954eedeac495271d0f", 80001: "0x"}, // TODO DAI decimals are not appropiate, fix
-    WBTC: {280: "0x", 324: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", 80001: "0x"},
-    WETH: {280: "0x", 324: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", 80001: "0x"},
-    ETH: {280: "0x0000000000000000000000000000000000000000", 324: "0x0000000000000000000000000000000000000000", 80001: "0x"},
+    USDC: {280: "0x0faF6df7054946141266420b43783387A78d82A9", 324: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", 80001: "0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747", 534353: "0xA0D71B9877f44C744546D649147E3F1e70a93760"}, // TODO review every token contract address and decimals** on mainnet and goerli
+    USDT: {280: "0x", 324: "0xdAC17F958D2ee523a2206206994597C13D831ec7", 80001: "0x", 534353: ""},
+    DAI: {280: "0x3e7676937A7E96CFB7616f255b9AD9FF47363D4b", 324: "0x6b175474e89094c44da98b954eedeac495271d0f", 80001: "0x", 534353: ""}, // TODO DAI decimals are not appropiate, fix
+    WBTC: {280: "0x", 324: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", 80001: "0x", 534353: ""},
+    WETH: {280: "0x", 324: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", 80001: "0x", 534353: ""},
+    ETH: {280: "0x0000000000000000000000000000000000000000", 324: "0x0000000000000000000000000000000000000000", 80001: "0x", 534353: ""},
 };
 
 interface IHash {
@@ -47,6 +49,7 @@ let sprintcheckoutContractAddressByNetwork: IHash = {};
 sprintcheckoutContractAddressByNetwork[280] = SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_GOERLI;
 sprintcheckoutContractAddressByNetwork[324] = SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_MAINNET;
 sprintcheckoutContractAddressByNetwork[80001] = SPRINTCHECKOUT_POLYGON_CONTRACT_ADDRESS_MUMBAI;
+sprintcheckoutContractAddressByNetwork[534353] = SPRINTCHECKOUT_SCROLL_ALPHA_CONTRACT_ADDRESS_TESTNET;
 
 
 let authResponse: AxiosResponse;
@@ -55,6 +58,8 @@ interface MerchantOrder {
     paymentSessionId: string;
     status: string;
     receipts: Array<string>;
+    chain: undefined|string
+    httpService: undefined|string
 }
 
 
@@ -83,7 +88,9 @@ export function ProcessPayment(props: {
         const merchantOrder: MerchantOrder = {
                 paymentSessionId: props.backendPaymentSessionId,
                 status: "",
-                receipts: [txHash.hash]
+                receipts: [txHash.hash],
+                chain: chain?.name,
+                httpService: chain?.rpcUrls.default.http.at(0)
             }
 
             let resp = await axios.post(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/process_receipts   ', merchantOrder);
@@ -181,7 +188,7 @@ export function ProcessPayment(props: {
     /****************************************************/
     let deps = [props.sessionNotFound, props.isConnected, props.merchantAmount, props.selectedToken, props.merchantPublicAddress,
         address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash, isTxValid]
-    // useWhatChanged(deps,'props.sessionNotFound, props.isConnected, props.merchantAmount, props.selectedToken, props.merchantPublicAddress, address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash, isTxValid');
+    useWhatChanged(deps,'props.sessionNotFound, props.isConnected, props.merchantAmount, props.selectedToken, props.merchantPublicAddress, address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash, isTxValid');
         useEffect(() => {
         let account = getAccount();
         setAddress(account.address);
@@ -192,12 +199,11 @@ export function ProcessPayment(props: {
         }
         if (txHash && !isTxValid) {
             setTxUrl("https://goerli.explorer.zksync.io/tx/" + txHash?.hash);
-            !isTxValid && processReceiptAndRedirect(txHash);
+            txHash && !isTxValid && processReceiptAndRedirect(txHash);
         }
         // setOrderId(props.orderId!);
         // setMerchantId(props.merchantId!);
-    }, [props.sessionNotFound, props.isConnected, props.merchantAmount, props.selectedToken, props.merchantPublicAddress,
-        address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash, isTxValid]);
+    }, deps);
 
     /****************************************************/
     /*                    HTML - JXS                    */
