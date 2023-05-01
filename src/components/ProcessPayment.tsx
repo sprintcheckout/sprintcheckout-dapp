@@ -93,7 +93,7 @@ export function ProcessPayment(props: {
                 receipts: [txHash.hash],
                 chain: chain?.name,
                 httpService: chain?.rpcUrls.default.http.at(0),
-                blockExplorer: chain?.blockExplorers?.default.url
+                blockExplorer: (chain?.blockExplorers?.default.url)? chain?.blockExplorers?.default.url : "noBlockExplorerUrl"
             }
 
             let resp = await axios.post(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/process_receipts', merchantOrder);
