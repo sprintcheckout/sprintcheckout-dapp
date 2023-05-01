@@ -61,6 +61,7 @@ interface MerchantOrder {
     receipts: Array<string>;
     chain: undefined|string
     httpService: undefined|string
+    blockExplorer: undefined|string
 }
 
 
@@ -91,10 +92,11 @@ export function ProcessPayment(props: {
                 status: "",
                 receipts: [txHash.hash],
                 chain: chain?.name,
-                httpService: chain?.rpcUrls.default.http.at(0)
+                httpService: chain?.rpcUrls.default.http.at(0),
+                blockExplorer: chain?.blockExplorers?.default.url
             }
 
-            let resp = await axios.post(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/process_receipts   ', merchantOrder);
+            let resp = await axios.post(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/process_receipts', merchantOrder);
         // TODO send tx hash to backend, validate and redirect to success or fail depending on the result
         if (resp.status == 200) {
             setIsTxBeingValidated(false);
@@ -200,7 +202,7 @@ export function ProcessPayment(props: {
         }
         if (txHash && !isTxValid) {
             setTxUrl("https://goerli.explorer.zksync.io/tx/" + txHash?.hash);
-            txHash && !isTxValid && processReceiptAndRedirect(txHash);
+            txHash && !isTxValid && !isTxBeingValidated && processReceiptAndRedirect(txHash);
         }
         // setOrderId(props.orderId!);
         // setMerchantId(props.merchantId!);

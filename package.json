@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@chakra-ui/react": "^2.4.9",
-    "@rainbow-me/rainbowkit": "^0.12.2",
+    "@rainbow-me/rainbowkit": "^0.12.8",
     "buffer": "^6.0.3",
     "ethers": "^5.7.2",
     "process": "^0.11.10",
@@ -18,7 +18,7 @@
     "react-dom": "^18.2.0",
     "serve": "^14.2.0",
     "util": "^0.12.4",
-    "wagmi": "^0.12.6"
+    "wagmi": "^0.12.11"
   },
   "devDependencies": {
     "@simbathesailor/use-what-changed": "^2.0.0",
