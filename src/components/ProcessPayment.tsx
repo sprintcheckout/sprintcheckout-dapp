@@ -11,9 +11,9 @@ import ERC20_CONTRACT_ABI from "../resources/abis/erctokenabi.json";
 import {BigNumber} from "ethers";
 import axios, {AxiosResponse} from "axios";
 import {useWhatChanged} from "@simbathesailor/use-what-changed";
-import {chains} from "../wagmi";
 import {polygonMumbai, polygonZkEvmTestnet, scrollTestnet, zkSync, zkSyncTestnet} from "@wagmi/core/chains";
 import {publicProvider} from "wagmi/dist/providers/public";
+import {unmountComponentAtNode} from "react-dom";
 
 const SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_GOERLI = '0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807'; // GOERLI ADDRESS
 const SPRINTCHECKOUT_POLYGON_CONTRACT_ADDRESS_MUMBAI = '0x3D28aCb2aCCF54FcD37f718Ea58dD780aCD2927d'; // POLYGON MUMBAI ADDRESS
@@ -27,33 +27,35 @@ const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
 const SPRINTCHECKOUT_FEE_ADDRESS = "0xAf1DD0F5dBebEc8c9c1c2a48aa79fB1D8E2DdA32"; // TODO check if makes sense to send the fee to the spc smart contract address
 const SPRINTCHECKOUT_FEE = 0.005;
 
-interface NetworkContract {
-    280: string;
-    324: string;
-    80001: string;
-    534353: string;
-    420: string; // optimism goerli
-}
-
 const tokenDecimals = new Map<string, number>([
     ["USDC", 6],
     ["USDT", 6],
     ["DAI", 18],
+    ["CTT", 18],
     ["WBTC", 8],
     ["WETH", 18],
     ["ETH", 18]
 ]);
 
-// 280 (goerli a.k.a zkSyncTestnet) and 324 (mainet a.k.a zkSync) are the ZkSync assigned ids
+interface NetworkContract {
+    280: string;    // zksync testnet
+    324: string;    // zksync mainnet
+    80001: string;  // polygon mumbai
+    534353: string; // scroll testnet
+    420: string;    // optimism goerli
+    10: string;     // optimism mainnet
+}
+
 // -> https://github.com/wagmi-dev/references/blob/df936de6d27b86fe8e7bad0dfa80e0810c0bcbd0/packages/chains/src/zkSync.ts#L4
 // -> https://github.com/wagmi-dev/references/blob/df936de6d27b86fe8e7bad0dfa80e0810c0bcbd0/packages/chains/src/zkSyncTestnet.ts#L4
 const contractAddresses: Record<string, NetworkContract> = {
-    USDC: {280: "0x0faF6df7054946141266420b43783387A78d82A9", 324: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", 80001: "0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747", 534353: "0xA0D71B9877f44C744546D649147E3F1e70a93760", 420: "0x7E07E15D2a87A24492740D16f5bdF58c16db0c4E"}, // TODO review every token contract address and decimals** on mainnet and goerli
-    USDT: {280: "0x", 324: "0xdAC17F958D2ee523a2206206994597C13D831ec7", 80001: "0x", 534353: "", 420: ""},
-    DAI: {280: "0x3e7676937A7E96CFB7616f255b9AD9FF47363D4b", 324: "0x6b175474e89094c44da98b954eedeac495271d0f", 80001: "0x", 534353: "", 420: ""}, // TODO DAI decimals are not appropiate, fix
-    WBTC: {280: "0x", 324: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", 80001: "0x", 534353: "", 420: ""},
-    WETH: {280: "0x", 324: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", 80001: "0x", 534353: "", 420: ""},
-    ETH: {280: "0x0000000000000000000000000000000000000000", 324: "0x0000000000000000000000000000000000000000", 80001: "0x", 534353: "", 420: ""},
+    USDC: {280: "0x0faF6df7054946141266420b43783387A78d82A9", 324: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", 80001: "0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747", 534353: "0xA0D71B9877f44C744546D649147E3F1e70a93760", 420: "0x7E07E15D2a87A24492740D16f5bdF58c16db0c4E", 10: "0x"}, // TODO review every token contract address and decimals** on mainnet and goerli
+    USDT: {280: "0x", 324: "0xdAC17F958D2ee523a2206206994597C13D831ec7", 80001: "0x", 534353: "0x", 420: "0x", 10: "0x"},
+    DAI: {280: "0x3e7676937A7E96CFB7616f255b9AD9FF47363D4b", 324: "0x6b175474e89094c44da98b954eedeac495271d0f", 80001: "0x", 534353: "", 420: "", 10: "0x"}, // TODO DAI decimals are not appropiate, fix
+    WBTC: {280: "0x", 324: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", 80001: "0x", 534353: "0x", 420: "0x", 10: "0x"},
+    WETH: {280: "0x", 324: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", 80001: "0x", 534353: "0x", 420: "0x", 10: "0x"},
+    ETH: {280: "0x0", 324: "0x0", 80001: "0x", 534353: "0x", 420: "0x", 10: "0x"},
+    CTT: {280: "0x0", 324: "0x0", 80001: "0x", 534353: "0x", 420: "0x7DdEFA2f027691116D0a7aa6418246622d70B12A", 10: "0x"},
 };
 
 interface IHash {
@@ -80,14 +82,6 @@ interface MerchantOrder {
 }
 
 // TODO: thinking also about extending to other chains (polygon) etc.
-function configureChainsCustom() {
-    // const { chains, provider, webSocketProvider } = configureChains(
-    //   [zkSync, zkSyncTestnet, polygonMumbai, ...(process.env.NODE_ENV === 'development' ? [zkSync, zkSyncTestnet, polygonMumbai] : [])],
-    //   [publicProvider()],
-    // )
-
-}
-
 // TODO check how to deploy a smart contract in other chains (polygon mumbai etc.)
 export function ProcessPayment(props: {
     backendPaymentSessionId: string, sessionNotFound: boolean, isConnected: boolean, merchantAmount: string | undefined, orderId: string | undefined,
@@ -170,7 +164,6 @@ export function ProcessPayment(props: {
 
     /** ************************************************************************************************* **/
     /**                                         TRANSFER FROM                                             **/
-
     /** ************************************************************************************************* **/
     //TODO Take into account ERC20 decimals for the transfer from operation
     let selectedTokenDecimals = props.selectedToken && tokenDecimals.get(props.selectedToken);

@@ -57,10 +57,11 @@ export function SprintcheckoutDapp() {
   let tokenAmountToPay: number; // Amount to pay in the selected token
 
   let tokenRoundDecimals: IHash = {};
-  tokenRoundDecimals["USDT"] = 2;
   tokenRoundDecimals["DAI"] = 2;
-  tokenRoundDecimals["BUSD"] = 2;
+  tokenRoundDecimals["USDT"] = 2;
   tokenRoundDecimals["USDC"] = 2;
+  tokenRoundDecimals["CTT"] = 2;
+  tokenRoundDecimals["BUSD"] = 2;
   tokenRoundDecimals["ETH"] = 6;
   tokenRoundDecimals["WETH"] = 6;
   tokenRoundDecimals["BTC"] = 6;
@@ -82,7 +83,6 @@ export function SprintcheckoutDapp() {
 
   const [tokenConversionRate, setTokenConversionRate] = useState<string | undefined>("");
   const {isConnected} = useAccount()
-
 
   function setDataFromPaymentSession(paymentSession: AxiosResponse) {
 
@@ -234,13 +234,13 @@ export function SprintcheckoutDapp() {
             <Spinner thickness='2px' speed='0.65s' size="xl" color="blue.500"/>
           </Center> : null
         }
-        {(sessionNotFound || networkError)?
+        {(sessionNotFound || networkError) ?
           <Flex alignContent={"center"} justifyContent={"center"}>
             <Center>
               <Alert status='warning' borderRadius="15px" alignContent={"center"}>
                 <AlertIcon/>
-                  {sessionNotFound? "Seems that you don't have a valid payment session" : null}
-                  {networkError? "Network error. Unable to retrieve information from the API" : null}
+                {sessionNotFound ? "Seems that you don't have a valid payment session" : null}
+                {networkError ? "Network error. Unable to retrieve information from the API" : null}
               </Alert>
             </Center>
           </Flex>
