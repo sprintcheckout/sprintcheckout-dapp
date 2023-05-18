@@ -1,4 +1,4 @@
-import {useAccount, useNetwork} from 'wagmi'
+import {configureChains, createClient, useAccount, useNetwork, WagmiConfig} from 'wagmi'
 import {
   Alert,
   AlertIcon,
@@ -17,14 +17,33 @@ import {
   Thead,
   Tr
 } from "@chakra-ui/react";
+import {Chain} from '@wagmi/chains';
 import * as React from "react";
 import {useEffect, useState} from "react";
 import axios, {AxiosResponse} from "axios";
 import {ProcessPayment} from "./ProcessPayment";
-import {ConnectButton} from "@rainbow-me/rainbowkit";
+import {ConnectButton, connectorsForWallets, RainbowKitProvider} from "@rainbow-me/rainbowkit";
+import {optimism, optimismGoerli, polygon, polygonMumbai, zkSync, zkSyncTestnet} from "@wagmi/core/chains";
+import {metaMaskWallet, walletConnectWallet} from "@rainbow-me/rainbowkit/wallets";
+import {publicProvider} from "wagmi/providers/public";
 
-const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
-//const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
+let defaultChains: any[] = [];
+let merchantChains: any[] = [];
+let client: any;
+
+export function setupChains(defaultChains: any[]) {
+  const {chains, provider, webSocketProvider} = configureChains(
+    defaultChains,
+    [publicProvider()],
+  );
+
+  // You can perform additional actions here if needed
+
+  return {chains, provider, webSocketProvider};
+}
+
+//const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
+const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
 const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
 
 interface IHash {
@@ -42,14 +61,26 @@ interface TokenConversionCollections {
 }
 
 let tokenConversionsList: TokenConversionCollections;
-let pricesForAmountRounded: Array<TokenConversion>;
-
 let authResponse: AxiosResponse;
 
+const MyComponent = (props: {
+  setChain: (currentChain: (Chain & { unsupported?: boolean }) | undefined) => void
+  setIsConnected: (isConnected: boolean) => void
+}) => {
+  const {chain, chains} = useNetwork();
+  const {isConnected} = useAccount();
+  useEffect(() => {
+    props.setChain(chain);
+    props.setIsConnected(isConnected);
+  }, [chain, chains, isConnected]);
+  return <div></div>;
+}
 
-export function SprintcheckoutDapp() {
 
-  const {chain} = useNetwork();
+export function SprintcheckoutDapp(id: string) {
+
+  const [chain, setChain] = useState<Chain>();
+  const [isConnected, setIsConnected] = useState<boolean>(false);
   let paymentSessionId: string;
   let currency: string;
   let token: string;
@@ -80,9 +111,9 @@ export function SprintcheckoutDapp() {
   const [sessionNotFound, setSessionNotFound] = useState<boolean>(false);
   const [networkError, setNetworkError] = useState<boolean>(false);
   const [backendPaymentSessionId, setBackendPaymentSessionId] = useState<string>("");
-
+  const [selectedChain, setSelectedChain] = useState<any>();
+  const [pricesForAmountRounded, setPricesForAmountRounded] = useState<any>();
   const [tokenConversionRate, setTokenConversionRate] = useState<string | undefined>("");
-  const {isConnected} = useAccount()
 
   function setDataFromPaymentSession(paymentSession: AxiosResponse) {
 
@@ -96,8 +127,37 @@ export function SprintcheckoutDapp() {
     setSelectedCurrency(currency);
   }
 
-  useEffect(() => {
+  function loadChains(psChain: { name: string; network: string; active: boolean }) {
+    if (psChain.active) {
+      let chainAndNetwork: string = psChain.name + "-" + psChain.network;
+      switch (chainAndNetwork) {
+        case "zksync-mainnet":
+          defaultChains.push(zkSync)
+          break;
+        case "zksync-goerli":
+          defaultChains.push(zkSyncTestnet)
+          break;
+        case "polygon-mainnet":
+          defaultChains.push(polygon)
+          break;
+        case "polygon-mumbai":
+          defaultChains.push(polygonMumbai)
+          break;
+        case "optimism-mainnet":
+          defaultChains.push(optimism)
+          break;
+        case "optimism-goerli":
+          defaultChains.push(optimismGoerli)
+          break;
+        default:
+          console.log("No chain available");
+      }
+    }
+  }
 
+  useEffect(() => {
+    setPricesForAmountRounded(null);
+    console.log("USE EFFECT!!!!!");
     const search = window.location.search;
     const params = new URLSearchParams(search);
     const paymentSessionIdB64 = params.get('uid');
@@ -107,68 +167,101 @@ export function SprintcheckoutDapp() {
       getPaymentSession(paymentSessionId).then(paymentSession => {
         setDataFromPaymentSession(paymentSession);
         getMerchantPaymentSettings(paymentSession.data.merchantId).then(paymentSettings => {
-          console.log("paymentSettings.data.chains");
-          console.log(paymentSettings.data.chains);
-          let selectedChain = paymentSettings.data.chains.filter((aChain: {
+
+          paymentSettings.data.chains.map((psChain: { name: string, network: string, active: boolean }) => {
+            loadChains(psChain);
+          });
+
+          if (!client) {
+            /** ********************************************  DYNAMIC CHAINS  ******************************************** **/
+            const {chains, provider, webSocketProvider} = setupChains(defaultChains);
+            merchantChains = chains;
+            let connectors = connectorsForWallets([
+              {
+                groupName: 'Recommended',
+                wallets: [
+                  metaMaskWallet({chains: merchantChains}),
+                  walletConnectWallet({chains: merchantChains}),
+                ],
+              },
+            ]);
+            client = createClient({
+              autoConnect: true,
+              connectors,
+              provider,
+              webSocketProvider,
+            });
+            /** ********************************************  END DYNAMIC CHAINS  ******************************************** **/
+          }
+          let selectedChainList = chain && paymentSettings.data.chains.filter((aChain: {
             id: number;
           }) => aChain.id === chain?.id);
-          console.log("selectedChain[0]");
-          console.log(selectedChain[0]);
-          setMerchantPublicAddress(selectedChain[0].publicAddress);
+          selectedChainList && selectedChainList[0] && selectedChainList[0].publicAddress && setMerchantPublicAddress(selectedChainList[0].publicAddress);
+          selectedChainList && selectedChainList[0] && !selectedChain && setSelectedChain(selectedChainList[0]);
+          selectedChainList && selectedChainList[0] && getTokenConversion(paymentSessionId, selectedChainList[0]);
+          selectedChainList && console.log(selectedChainList[0]);
         });
-        getTokenConversion(paymentSessionId)
+        getTokenConversion(paymentSessionId, selectedChain);
       })
         .catch(err => {
-            if (err.toString().indexOf("Network Error") > -1){
-                setNetworkError(true);
-            } else {
-                console.log("Payment Session error: " + err);
-                setSessionNotFound(true);
-            }
+          if (err.toString().indexOf("Network Error") > -1) {
+            setNetworkError(true);
+          } else {
+            console.log("Payment Session error: " + err);
+            setSessionNotFound(true);
+          }
         });
-
     } else {
       setSessionNotFound(true);
     }
 
-  }, []);
+  }, [chain]);
 
-  async function getMerchantPaymentSettings(merchantId: string) {
 
-    let paymentSettingsResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_settings/' + merchantId);
+  function getMerchantPaymentSettings(merchantId: string) {
+
+    let paymentSettingsResponse = axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_settings/' + merchantId);
     return paymentSettingsResponse;
   }
 
-  async function getPaymentSession(id: string) {
+  function getPaymentSession(id: string) {
 
-    return await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/' + id);
+    return axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/' + id);
   }
 
-  async function getTokenConversion(id: string) {
+  function getTokenConversion(id: string, selectedChainParam: any) {
 
-    let tokensResponse = await axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/token_conversions/' + id);
-    tokenConversionsList = tokensResponse.data;
-    let pricesForAmount = tokenConversionsList?.tokenPricesForAmount;
-    pricesForAmountRounded = pricesForAmount?.map((obj: { symbol: string; conversion: number; }) => {
-      let tc = {} as TokenConversion
-      tc.symbol = obj.symbol.toUpperCase();
-      let fixedNum = obj.conversion.toFixed(tokenRoundDecimals[obj.symbol.toUpperCase()!]);
-      tc.conversion = parseFloat(fixedNum);
-      return tc;
-    });
-    let pricesForJustOne = tokenConversionsList?.tokenPricesForJustOne;
-    let firstTokenForAmount = pricesForAmount.at(0);
-    let symbol = firstTokenForAmount?.symbol?.toUpperCase().toString();
-    let conversionNumber = firstTokenForAmount?.conversion;
-    let conversion = firstTokenForAmount?.conversion?.toFixed(tokenRoundDecimals[symbol!])?.toString();
+    let tokensResponse = axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/token_conversions/' + id);
+    tokensResponse.then(({data}) => {
+      tokenConversionsList = data;
+      let pricesForAmount = tokenConversionsList?.tokenPricesForAmount;
+      let filter = pricesForAmount?.map((obj: { symbol: string; conversion: number; }) => {
+        let tc = {} as TokenConversion
+        tc.symbol = obj.symbol.toUpperCase();
+        // console.log(selectedChain)
+        // @ts-ignore
+        if (selectedChainParam && selectedChainParam.tokens.find(token => token.symbol === tc.symbol)?.active === false) {
+          return null; // skip the element if symbol is mapped and active flag is false
+        }
+        let fixedNum = obj.conversion.toFixed(tokenRoundDecimals[obj.symbol.toUpperCase()!]);
+        tc.conversion = parseFloat(fixedNum);
+        return tc;
+      }).filter(Boolean);
+      setPricesForAmountRounded(filter);
+      let pricesForJustOne = tokenConversionsList?.tokenPricesForJustOne;
+      let firstTokenForAmount = pricesForAmount.at(0);
+      let symbol = firstTokenForAmount?.symbol?.toUpperCase().toString();
+      let conversionNumber = firstTokenForAmount?.conversion;
+      let conversion = firstTokenForAmount?.conversion?.toFixed(tokenRoundDecimals[symbol!])?.toString();
 
-    setSelectedToken(symbol);
-    setTokenAmount(conversion);
-    let firsTokenForJustOne = pricesForJustOne?.filter((elem: {
-      symbol: any;
-    }) => elem.symbol === symbol?.toLowerCase());
-    setTokenConversionRate(firsTokenForJustOne.at(0)?.conversion?.toFixed(tokenRoundDecimals[symbol!]).toString());
-    tokenAmountToPay = conversionNumber!;
+      setSelectedToken(symbol);
+      setTokenAmount(conversion);
+      let firsTokenForJustOne = pricesForJustOne?.filter((elem: {
+        symbol: any;
+      }) => elem.symbol === symbol?.toLowerCase());
+      setTokenConversionRate(firsTokenForJustOne.at(0)?.conversion?.toFixed(tokenRoundDecimals[symbol!]).toString());
+      tokenAmountToPay = conversionNumber!;
+    })
   }
 
   function onChangeSendTokenAndConversion(event: any) {
@@ -267,14 +360,16 @@ export function SprintcheckoutDapp() {
                     <Td>
                       <Select style={{fontWeight: 'bold'}} color={"#3182CE"} borderRadius="20px"
                               onChange={onChangeSendTokenAndConversion}>
-                        {pricesForAmountRounded?.map((elem, index) => {
-                          if (index === 0 && !token) {
-                            token = elem.symbol.toUpperCase();
-                          }
-                          return <option key={elem.symbol} value={elem.symbol}>
-                            {elem.symbol}
-                          </option>;
-                        })}
+                        {
+                          // @ts-ignore
+                          pricesForAmountRounded?.map((elem, index) => {
+                            if (index === 0 && !token) {
+                              token = elem.symbol.toUpperCase();
+                            }
+                            return <option key={elem.symbol} value={elem.symbol}>
+                              {elem.symbol}
+                            </option>;
+                          })}
                       </Select>
                     </Td>
                   </Tr>
@@ -296,19 +391,21 @@ export function SprintcheckoutDapp() {
         )}
 
         {/*TODO: Connect Button should refresh the Approve/Pay buttons in our component when changing Metamask address */}
-        <Center alignContent="center" marginTop={10} pb={30} id={"connectButtonId"}>
-          <ConnectButton accountStatus={"address"} chainStatus="name" showBalance={false}/>
-        </Center>
-        {/*</Box>*/}
-
-        {isConnected ?
-
-          <ProcessPayment backendPaymentSessionId={backendPaymentSessionId} sessionNotFound={sessionNotFound}
-                          isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId}
-                          merchantId={merchantId} merchantPublicAddress={merchantPublicAddress}
-                          selectedToken={selectedToken}
-                          successUrl={successUrl} failUrl={failUrl}/> : null
-        }
+        {client && merchantChains && <WagmiConfig client={client}>
+            <RainbowKitProvider chains={merchantChains}>
+                <Center alignContent="center" marginTop={10} pb={30} id={"connectButtonId"}>
+                    <MyComponent setChain={setChain} setIsConnected={setIsConnected}/>
+                    <ConnectButton accountStatus={"address"} chainStatus="name" showBalance={false}/>
+                </Center>
+              {/*{isConnected ?*/}
+                <ProcessPayment backendPaymentSessionId={backendPaymentSessionId} sessionNotFound={sessionNotFound}
+                                isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId}
+                                merchantId={merchantId} merchantPublicAddress={merchantPublicAddress}
+                                selectedToken={selectedToken}
+                                successUrl={successUrl} failUrl={failUrl}/>
+            </RainbowKitProvider>
+        </WagmiConfig>}
+        {/*}*/}
 
         {/* TODO add icons and links */}
         {/*<Center>*/}

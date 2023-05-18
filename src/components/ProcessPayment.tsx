@@ -8,12 +8,13 @@ import { useNetwork } from 'wagmi'
 
 import SPRINTCHECKOUT_CONTRACT_ABI from "../resources/abis/abi.json";
 import ERC20_CONTRACT_ABI from "../resources/abis/erctokenabi.json";
-import {BigNumber} from "ethers";
+import {BigNumberish, ethers} from "ethers";
 import axios, {AxiosResponse} from "axios";
 import {useWhatChanged} from "@simbathesailor/use-what-changed";
 import {polygonMumbai, polygonZkEvmTestnet, scrollTestnet, zkSync, zkSyncTestnet} from "@wagmi/core/chains";
 import {publicProvider} from "wagmi/dist/providers/public";
 import {unmountComponentAtNode} from "react-dom";
+import BigNumber from "bignumber.js";
 
 const SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_GOERLI = '0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807'; // GOERLI ADDRESS
 const SPRINTCHECKOUT_POLYGON_CONTRACT_ADDRESS_MUMBAI = '0x3D28aCb2aCCF54FcD37f718Ea58dD780aCD2927d'; // POLYGON MUMBAI ADDRESS
@@ -21,8 +22,8 @@ const SPRINTCHECKOUT_POLYGON_CONTRACT_ADDRESS_ZKEVM = '0xDdb60d551D819594B96b29b
 const SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_MAINNET = '0x2bf81700C523E4E95a4FF0214b933348BAaA09eF'; // MAINNET ADDRESS
 const SPRINTCHECKOUT_SCROLL_ALPHA_CONTRACT_ADDRESS_TESTNET = '0x3D28aCb2aCCF54FcD37f718Ea58dD780aCD2927d'; // TESNET ADDRESS
 const SPRINTCHECKOUT_OPTIMISM_GOERLI_CONTRACT_ADDRESS_TESTNET = '0x3D28aCb2aCCF54FcD37f718Ea58dD780aCD2927d';
-//const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
-const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
+const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
+//const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
 const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
 const SPRINTCHECKOUT_FEE_ADDRESS = "0xAf1DD0F5dBebEc8c9c1c2a48aa79fB1D8E2DdA32"; // TODO check if makes sense to send the fee to the spc smart contract address
 const SPRINTCHECKOUT_FEE = 0.005;
@@ -49,13 +50,13 @@ interface NetworkContract {
 // -> https://github.com/wagmi-dev/references/blob/df936de6d27b86fe8e7bad0dfa80e0810c0bcbd0/packages/chains/src/zkSync.ts#L4
 // -> https://github.com/wagmi-dev/references/blob/df936de6d27b86fe8e7bad0dfa80e0810c0bcbd0/packages/chains/src/zkSyncTestnet.ts#L4
 const contractAddresses: Record<string, NetworkContract> = {
-    USDC: {280: "0x0faF6df7054946141266420b43783387A78d82A9", 324: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", 80001: "0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747", 534353: "0xA0D71B9877f44C744546D649147E3F1e70a93760", 420: "0x7E07E15D2a87A24492740D16f5bdF58c16db0c4E", 10: "0x"}, // TODO review every token contract address and decimals** on mainnet and goerli
-    USDT: {280: "0x", 324: "0xdAC17F958D2ee523a2206206994597C13D831ec7", 80001: "0x", 534353: "0x", 420: "0x", 10: "0x"},
-    DAI: {280: "0x3e7676937A7E96CFB7616f255b9AD9FF47363D4b", 324: "0x6b175474e89094c44da98b954eedeac495271d0f", 80001: "0x", 534353: "", 420: "", 10: "0x"}, // TODO DAI decimals are not appropiate, fix
-    WBTC: {280: "0x", 324: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", 80001: "0x", 534353: "0x", 420: "0x", 10: "0x"},
-    WETH: {280: "0x", 324: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", 80001: "0x", 534353: "0x", 420: "0x", 10: "0x"},
-    ETH: {280: "0x0", 324: "0x0", 80001: "0x", 534353: "0x", 420: "0x", 10: "0x"},
-    CTT: {280: "0x0", 324: "0x0", 80001: "0x", 534353: "0x", 420: "0x7DdEFA2f027691116D0a7aa6418246622d70B12A", 10: "0x"},
+    USDC: {280: "0x0faF6df7054946141266420b43783387A78d82A9", 324: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", 80001: "0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747", 534353: "0xA0D71B9877f44C744546D649147E3F1e70a93760", 420: "0x7E07E15D2a87A24492740D16f5bdF58c16db0c4E", 10: "0x0000000000000000000000000000000000000000"}, // TODO review every token contract address and decimals** on mainnet and goerli
+    USDT: {280: "0x0000000000000000000000000000000000000000", 324: "0xdAC17F958D2ee523a2206206994597C13D831ec7", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000"},
+    DAI: {280: "0x3e7676937A7E96CFB7616f255b9AD9FF47363D4b", 324: "0x6b175474e89094c44da98b954eedeac495271d0f", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000"}, // TODO DAI decimals are not appropiate, fix
+    WBTC: {280: "0x0000000000000000000000000000000000000000", 324: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000"},
+    WETH: {280: "0x0000000000000000000000000000000000000000", 324: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000"},
+    ETH: {280: "0x0", 324: "0x0", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000"},
+    CTT: {280: "0x0", 324: "0x0", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x7DdEFA2f027691116D0a7aa6418246622d70B12A", 10: "0x0000000000000000000000000000000000000000"},
 };
 
 interface IHash {
@@ -168,15 +169,23 @@ export function ProcessPayment(props: {
     //TODO Take into account ERC20 decimals for the transfer from operation
     let selectedTokenDecimals = props.selectedToken && tokenDecimals.get(props.selectedToken);
     const orderAmountRealBigNumber: "" | undefined | 0 | BigNumber = props.merchantAmount && props.selectedToken && selectedTokenDecimals &&
-        (BigNumber.from(Math.round(Number(props.merchantAmount)).toString()).mul(BigNumber.from((10 ** selectedTokenDecimals).toString())));
+        ( new BigNumber(Number(props.merchantAmount).toString()).multipliedBy(new BigNumber((10 ** selectedTokenDecimals).toString())));
+
+    // console.log("orderAmountRealBigNumber" + orderAmountRealBigNumber);
+
     // const spcFeeToPayRealBigNumber = props.merchantAmount &&
     //   BigNumber.from(Math.round(Number(props.merchantAmount)).toString()).mul(BigNumber.from(SPRINTCHECKOUT_FEE).mul((BigNumber.from(10 ** 18).toString())));
     // const amountToPayBigNumber = orderAmountRealBigNumber && spcFeeToPayRealBigNumber && orderAmountRealBigNumber.add(spcFeeToPayRealBigNumber); // 1.005
     // const merchantAmountMinusSpcFeeBigNumber = orderAmountRealBigNumber && spcFeeToPayRealBigNumber && orderAmountRealBigNumber.sub(spcFeeToPayRealBigNumber);
 
-    const percentage = BigNumber.from('500'); // represents 0.05%
-    const spcFeeToPayRealBigNumber = orderAmountRealBigNumber && BigNumber.from(orderAmountRealBigNumber).mul(percentage).div(10000);
-    const merchantAmountRealBigNumber = orderAmountRealBigNumber && spcFeeToPayRealBigNumber && orderAmountRealBigNumber.sub(spcFeeToPayRealBigNumber);
+    // console.log("Order Amount:" + orderAmountRealBigNumber);
+
+    const percentage = new BigNumber('500'); // represents 0.05%
+    const spcFeeToPayRealBigNumber = orderAmountRealBigNumber && new BigNumber(orderAmountRealBigNumber).multipliedBy(percentage).div(10000);
+    // console.log("Spc fee:" + spcFeeToPayRealBigNumber);
+    const merchantAmountRealBigNumber = orderAmountRealBigNumber && spcFeeToPayRealBigNumber && orderAmountRealBigNumber.minus(spcFeeToPayRealBigNumber);
+    // console.log("Merchant amount:" + merchantAmountRealBigNumber);
+
 
     //TODO estimate gas fee for the transfer from and do the maths to subtract it from the merchant and spc fee amounts
     //TODO Account Abstraction / Paymaster could be the way to go
@@ -194,7 +203,7 @@ export function ProcessPayment(props: {
         abi: SPRINTCHECKOUT_CONTRACT_ABI,
         functionName: 'transferFrom',
         args: [props.merchantPublicAddress && props.selectedToken && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract], address, props.merchantPublicAddress, SPRINTCHECKOUT_FEE_ADDRESS,
-            merchantAmountRealBigNumber ? BigNumber.from(merchantAmountRealBigNumber.toString()) : undefined, spcFeeToPayRealBigNumber ? BigNumber.from(spcFeeToPayRealBigNumber.toString()) : undefined],
+            merchantAmountRealBigNumber ? new BigNumber(merchantAmountRealBigNumber.toString()) : undefined, spcFeeToPayRealBigNumber ? new BigNumber(spcFeeToPayRealBigNumber.toString()) : undefined],
     })
 
     const {data: txHash, isLoading, isSuccess, write: pay} = useContractWrite(config)
@@ -207,9 +216,13 @@ export function ProcessPayment(props: {
         if (!balance || !orderAmount) {
             return true;
         }
+        const balanceStr : string = balance.toString();
         console.log("calculate balance:" + balance);
         console.log("calculate amount:" + orderAmount);
-        return BigNumber.from(balance).gte(orderAmount);
+        const balanceVar = new BigNumber(balanceStr);
+        let b = balanceVar.gte(new BigNumber(orderAmount));
+        console.log("calculateIsBalanceEnough? " + b);
+        return b;
     }
 
     /****************************************************/
@@ -217,7 +230,7 @@ export function ProcessPayment(props: {
     /****************************************************/
     let deps = [props.sessionNotFound, props.isConnected, props.merchantAmount, props.selectedToken, props.merchantPublicAddress,
         address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash, isTxValid]
-    useWhatChanged(deps,'props.sessionNotFound, props.isConnected, props.merchantAmount, props.selectedToken, props.merchantPublicAddress, address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash, isTxValid');
+    //useWhatChanged(deps,'props.sessionNotFound, props.isConnected, props.merchantAmount, props.selectedToken, props.merchantPublicAddress, address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash, isTxValid');
         useEffect(() => {
         let account = getAccount();
         setAddress(account.address);
@@ -243,7 +256,7 @@ export function ProcessPayment(props: {
             {!props.sessionNotFound && props.selectedToken != 'ETH' ?
                 <Center paddingBottom={"40px"}>
                     {/* dev purposes for seeing the content: {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
-                    {/*{isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
+                    {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}
                     {(isConnected && !isBalanceEnough && !txUrl) ?
                         (isApproveLoading && (!isApproveSuccess || !isBalanceEnough) || (isApproveSuccess && !isBalanceEnough)) ?
                             <Spinner thickness='2px' speed='0.65s' size="xl" color="blue.500"/> :
