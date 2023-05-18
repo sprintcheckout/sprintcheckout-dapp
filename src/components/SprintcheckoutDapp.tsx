@@ -77,7 +77,7 @@ const MyComponent = (props: {
 }
 
 
-export function SprintcheckoutDapp(id: string) {
+export function SprintcheckoutDapp() {
 
   const [chain, setChain] = useState<Chain>();
   const [isConnected, setIsConnected] = useState<boolean>(false);
