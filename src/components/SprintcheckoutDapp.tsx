@@ -23,7 +23,7 @@ import {useEffect, useState} from "react";
 import axios, {AxiosResponse} from "axios";
 import {ProcessPayment} from "./ProcessPayment";
 import {ConnectButton, connectorsForWallets, RainbowKitProvider} from "@rainbow-me/rainbowkit";
-import {optimism, optimismGoerli, polygon, polygonMumbai, zkSync, zkSyncTestnet} from "@wagmi/core/chains";
+import {optimism, optimismGoerli, polygon, polygonMumbai, zkSync, zkSyncTestnet, avalancheFuji} from "@wagmi/core/chains";
 import {metaMaskWallet, walletConnectWallet} from "@rainbow-me/rainbowkit/wallets";
 import {publicProvider} from "wagmi/providers/public";
 
@@ -97,6 +97,7 @@ export function SprintcheckoutDapp() {
   tokenRoundDecimals["WETH"] = 6;
   tokenRoundDecimals["BTC"] = 6;
   tokenRoundDecimals["WBTC"] = 6;
+  tokenRoundDecimals["AVAX"] = 6;
 
   const [selectedToken, setSelectedToken] = useState<string | undefined>("");
   const [selectedCurrency, setSelectedCurrency] = useState<string | undefined>("");
@@ -149,6 +150,9 @@ export function SprintcheckoutDapp() {
         case "optimism-goerli":
           defaultChains.push(optimismGoerli)
           break;
+        case "avalanche-fuji":
+          defaultChains.push(avalancheFuji)
+          break;
         default:
           console.log("No chain available");
       }
@@ -198,7 +202,6 @@ export function SprintcheckoutDapp() {
           selectedChainList && selectedChainList[0] && selectedChainList[0].publicAddress && setMerchantPublicAddress(selectedChainList[0].publicAddress);
           selectedChainList && selectedChainList[0] && !selectedChain && setSelectedChain(selectedChainList[0]);
           selectedChainList && selectedChainList[0] && getTokenConversion(paymentSessionId, selectedChainList[0]);
-          selectedChainList && console.log(selectedChainList[0]);
         });
         getTokenConversion(paymentSessionId, selectedChain);
       })
@@ -321,12 +324,12 @@ export function SprintcheckoutDapp() {
         </Center>
         {/*<Box display="flex" flexDirection="column">*/}
         {((!sessionNotFound && !networkError) && (!amount || !selectedCurrency || !tokenAmount || !pricesForAmountRounded)) ?
-          <Center>
+          <Center pb={10}>
             <Spinner thickness='2px' speed='0.65s' size="xl" color="blue.500"/>
           </Center> : null
         }
         {(sessionNotFound || networkError) ?
-          <Flex alignContent={"center"} justifyContent={"center"}>
+          <Flex alignContent={"center"} justifyContent={"center"} pb={10}>
             <Center>
               <Alert status='warning' borderRadius="15px" alignContent={"center"}>
                 <AlertIcon/>
