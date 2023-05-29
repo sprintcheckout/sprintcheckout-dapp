@@ -157,7 +157,6 @@ export function SprintcheckoutDapp() {
 
   useEffect(() => {
     setPricesForAmountRounded(null);
-    console.log("USE EFFECT!!!!!");
     const search = window.location.search;
     const params = new URLSearchParams(search);
     const paymentSessionIdB64 = params.get('uid');
@@ -238,7 +237,6 @@ export function SprintcheckoutDapp() {
       let filter = pricesForAmount?.map((obj: { symbol: string; conversion: number; }) => {
         let tc = {} as TokenConversion
         tc.symbol = obj.symbol.toUpperCase();
-        // console.log(selectedChain)
         // @ts-ignore
         if (selectedChainParam && selectedChainParam.tokens.find(token => token.symbol === tc.symbol)?.active === false) {
           return null; // skip the element if symbol is mapped and active flag is false

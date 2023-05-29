@@ -217,11 +217,8 @@ export function ProcessPayment(props: {
             return true;
         }
         const balanceStr : string = balance.toString();
-        console.log("calculate balance:" + balance);
-        console.log("calculate amount:" + orderAmount);
         const balanceVar = new BigNumber(balanceStr);
         let b = balanceVar.gte(new BigNumber(orderAmount));
-        console.log("calculateIsBalanceEnough? " + b);
         return b;
     }
 
