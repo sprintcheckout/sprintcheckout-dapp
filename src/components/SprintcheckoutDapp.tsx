@@ -241,7 +241,7 @@ export function SprintcheckoutDapp() {
         let tc = {} as TokenConversion
         tc.symbol = obj.symbol.toUpperCase();
         // @ts-ignore
-        if (selectedChainParam && selectedChainParam.tokens.find(token => token.symbol === tc.symbol)?.active === false) {
+        if (selectedChainParam && selectedChainParam.tokens.find(token => token.symbol === tc.symbol)?.active !== true) {
           return null; // skip the element if symbol is mapped and active flag is false
         }
         let fixedNum = obj.conversion.toFixed(tokenRoundDecimals[obj.symbol.toUpperCase()!]);
