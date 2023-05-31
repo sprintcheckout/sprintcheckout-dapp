@@ -1,4 +1,7 @@
-import {configureChains, createClient, useAccount, useNetwork, WagmiConfig} from 'wagmi'
+import {useAccount, useNetwork, WagmiConfig} from 'wagmi'
+import {configureChains, createConfig} from '@wagmi/core'
+import { createPublicClient, http } from 'viem'
+
 import {
   Alert,
   AlertIcon,
@@ -26,20 +29,20 @@ import {ConnectButton, connectorsForWallets, RainbowKitProvider} from "@rainbow-
 import {optimism, optimismGoerli, polygon, polygonMumbai, zkSync, zkSyncTestnet, avalancheFuji} from "@wagmi/core/chains";
 import {metaMaskWallet, walletConnectWallet} from "@rainbow-me/rainbowkit/wallets";
 import {publicProvider} from "wagmi/providers/public";
+import {mainnet} from "wagmi/chains";
 
-let defaultChains: any[] = [];
-let merchantChains: any[] = [];
+let defaultChains: Chain[] = [];
+let merchantChains: Chain[] = [];
 let client: any;
+let config: any;
 
-export function setupChains(defaultChains: any[]) {
-  const {chains, provider, webSocketProvider} = configureChains(
+export function setupChains(defaultChains: Chain[]) {
+  const {chains, publicClient, webSocketPublicClient} = configureChains(
     defaultChains,
     [publicProvider()],
   );
 
-  // You can perform additional actions here if needed
-
-  return {chains, provider, webSocketProvider};
+  return {chains, publicClient, webSocketPublicClient};
 }
 
 const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
@@ -175,25 +178,25 @@ export function SprintcheckoutDapp() {
             loadChains(psChain);
           });
 
-          if (!client) {
+          if (!config) {
+
             /** ********************************************  DYNAMIC CHAINS  ******************************************** **/
-            const {chains, provider, webSocketProvider} = setupChains(defaultChains);
+            const {chains, publicClient, webSocketPublicClient} = setupChains(defaultChains);
             merchantChains = chains;
-            let connectors = connectorsForWallets([
-              {
-                groupName: 'Recommended',
-                wallets: [
-                  metaMaskWallet({chains: merchantChains}),
-                  walletConnectWallet({chains: merchantChains}),
-                ],
-              },
-            ]);
-            client = createClient({
+
+            config = createConfig({
               autoConnect: true,
-              connectors,
-              provider,
-              webSocketProvider,
-            });
+              publicClient: createPublicClient({
+                chain: mainnet,
+                transport: http(),
+              }),
+            })
+            // client = createClient({
+            //   autoConnect: true,
+            //   connectors,
+            //   provider,
+            //   webSocketProvider,
+            // });
             /** ********************************************  END DYNAMIC CHAINS  ******************************************** **/
           }
           let selectedChainList = chain && paymentSettings.data.chains.filter((aChain: {
@@ -392,7 +395,7 @@ export function SprintcheckoutDapp() {
         )}
 
         {/*TODO: Connect Button should refresh the Approve/Pay buttons in our component when changing Metamask address */}
-        {client && merchantChains && <WagmiConfig client={client}>
+        {config && merchantChains && <WagmiConfig config={config}>
             <RainbowKitProvider chains={merchantChains}>
                 <Center alignContent="center" marginTop={10} pb={30} id={"connectButtonId"}>
                     <MyComponent setChain={setChain} setIsConnected={setIsConnected}/>
