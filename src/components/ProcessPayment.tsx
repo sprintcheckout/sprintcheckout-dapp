@@ -247,7 +247,7 @@ export function ProcessPayment(props: {
             {!props.sessionNotFound && props.selectedToken != 'ETH' ?
                 <Center paddingBottom={"40px"}>
                     {/* dev purposes for seeing the content: {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
-                    {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}
+                    {/*{isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
                     {(isConnected && !isBalanceEnough && !txUrl) ?
                         (isApproveLoading && (!isApproveSuccess || !isBalanceEnough) || (isApproveSuccess && !isBalanceEnough)) ?
                             <Spinner thickness='2px' speed='0.65s' size="xl" color="blue.500"/> :
