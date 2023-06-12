@@ -2,11 +2,11 @@ import {useContractRead, useContractWrite, useNetwork, usePrepareContractWrite} 
 import {getAccount} from "@wagmi/core";
 import {useEffect, useState} from "react";
 import {Alert, AlertDescription, AlertIcon, AlertTitle, Button, Center, Link, Spinner, Text} from "@chakra-ui/react";
-// import { useWhatChanged } from '@simbathesailor/use-what-changed';
 import SPRINTCHECKOUT_CONTRACT_ABI from "../resources/abis/abi.json";
 import ERC20_CONTRACT_ABI from "../resources/abis/erctokenabi.json";
-import axios, {AxiosResponse} from "axios";
+import axios from "axios";
 import BigNumber from "bignumber.js";
+// import {useWhatChanged} from "@simbathesailor/use-what-changed";
 
 const SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_GOERLI = '0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807'; // GOERLI ADDRESS
 const SPRINTCHECKOUT_POLYGON_CONTRACT_ADDRESS_MUMBAI = '0x3D28aCb2aCCF54FcD37f718Ea58dD780aCD2927d'; // POLYGON MUMBAI ADDRESS
@@ -40,17 +40,17 @@ interface NetworkContract {
     534353: string; // scroll testnet
     420: string;    // optimism goerli
     10: string;     // optimism mainnet
-    43113: string;     // avalanche fuji
+    43113: string;  // avalanche fuji
 }
 
 // -> https://github.com/wagmi-dev/references/blob/df936de6d27b86fe8e7bad0dfa80e0810c0bcbd0/packages/chains/src/zkSync.ts#L4
 // -> https://github.com/wagmi-dev/references/blob/df936de6d27b86fe8e7bad0dfa80e0810c0bcbd0/packages/chains/src/zkSyncTestnet.ts#L4
 const contractAddresses: Record<string, NetworkContract> = {
-    USDC: {280: "0x0faF6df7054946141266420b43783387A78d82A9", 324: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", 80001: "0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747", 534353: "0xA0D71B9877f44C744546D649147E3F1e70a93760", 420: "0x7E07E15D2a87A24492740D16f5bdF58c16db0c4E", 10: "0x0000000000000000000000000000000000000000", 43113: "0x5425890298aed601595a70AB815c96711a31Bc65"}, // TODO review every token contract address and decimals** on mainnet and goerli
-    USDT: {280: "0x0000000000000000000000000000000000000000", 324: "0xdAC17F958D2ee523a2206206994597C13D831ec7", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000", 43113: "0x0000000000000000000000000000000000000000"},
-    DAI: {280: "0x3e7676937A7E96CFB7616f255b9AD9FF47363D4b", 324: "0x6b175474e89094c44da98b954eedeac495271d0f", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000", 43113: "0x0000000000000000000000000000000000000000"}, // TODO DAI decimals are not appropiate, fix
-    WBTC: {280: "0x0000000000000000000000000000000000000000", 324: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000", 43113: "0x0000000000000000000000000000000000000000"},
-    WETH: {280: "0x0000000000000000000000000000000000000000", 324: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000", 43113: "0x0000000000000000000000000000000000000000"},
+    USDC: {280: "0x0faF6df7054946141266420b43783387A78d82A9", 324: "0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4", 80001: "0xe6b8a5CF854791412c1f6EFC7CAf629f5Df1c747", 534353: "0xA0D71B9877f44C744546D649147E3F1e70a93760", 420: "0x7E07E15D2a87A24492740D16f5bdF58c16db0c4E", 10: "0x0000000000000000000000000000000000000000", 43113: "0x5425890298aed601595a70AB815c96711a31Bc65"}, // TODO review every token contract address and decimals** on mainnet and goerli
+    USDT: {280: "0x0000000000000000000000000000000000000000", 324: "0x0000000000000000000000000000000000000000", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000", 43113: "0x0000000000000000000000000000000000000000"},
+    DAI: {280: "0x3e7676937A7E96CFB7616f255b9AD9FF47363D4b", 324: "0x0000000000000000000000000000000000000000", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000", 43113: "0x0000000000000000000000000000000000000000"}, // TODO DAI decimals are not appropiate, fix
+    WBTC: {280: "0x0000000000000000000000000000000000000000", 324: "0x0000000000000000000000000000000000000000", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000", 43113: "0x0000000000000000000000000000000000000000"},
+    WETH: {280: "0x0000000000000000000000000000000000000000", 324: "0x0000000000000000000000000000000000000000", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000", 43113: "0x0000000000000000000000000000000000000000"},
     ETH: {280: "0x0000000000000000000000000000000000000000", 324: "0x0000000000000000000000000000000000000000", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x0000000000000000000000000000000000000000", 10: "0x0000000000000000000000000000000000000000", 43113: "0x0000000000000000000000000000000000000000"},
     CTT: {280: "0x0000000000000000000000000000000000000000", 324: "0x0000000000000000000000000000000000000000", 80001: "0x0000000000000000000000000000000000000000", 534353: "0x0000000000000000000000000000000000000000", 420: "0x7DdEFA2f027691116D0a7aa6418246622d70B12A", 10: "0x0000000000000000000000000000000000000000", 43113: "0x0000000000000000000000000000000000000000"},
 };
@@ -66,9 +66,6 @@ sprintcheckoutContractAddressByNetwork[80001] = SPRINTCHECKOUT_POLYGON_CONTRACT_
 sprintcheckoutContractAddressByNetwork[534353] = SPRINTCHECKOUT_SCROLL_ALPHA_CONTRACT_ADDRESS_TESTNET;
 sprintcheckoutContractAddressByNetwork[420] = SPRINTCHECKOUT_OPTIMISM_GOERLI_CONTRACT_ADDRESS_TESTNET;
 sprintcheckoutContractAddressByNetwork[43113] = SPRINTCHECKOUT_AVALANCHE_FUJI_CONTRACT_ADDRESS_TESTNET
-
-
-let authResponse: AxiosResponse;
 
 interface MerchantOrder {
     paymentSessionId: string;
@@ -140,7 +137,9 @@ export function ProcessPayment(props: {
     /** ************************************************************************************************* **/
     /**                                         APPROVAL                                                  **/
     /** ************************************************************************************************* **/
-    const highAmountForApproval = Number(9000000) * (100 ** 2); // TODO this approves a high amount based on amount to pay, think about which number will be
+    let selectedTokenDecimals = props.selectedToken && tokenDecimals.get(props.selectedToken);
+    // const highAmountForApproval = new BigNumber((10 ** 18).toString()); // TODO this approves a high amount based on amount to pay, think about which number will be
+    const highAmountForApproval = selectedTokenDecimals && ( new BigNumber(Number(props.merchantAmount).toString()).multipliedBy(new BigNumber((10 ** selectedTokenDecimals).toString()))); // TODO this approves a high amount based on amount to pay, think about which number will be
     // console.log("highAmountForApproval");
     // console.log(highAmountForApproval);
     const {config: erc20ConfigApprove} = usePrepareContractWrite({
@@ -164,7 +163,6 @@ export function ProcessPayment(props: {
     /**                                         TRANSFER FROM                                             **/
     /** ************************************************************************************************* **/
     //TODO Take into account ERC20 decimals for the transfer from operation
-    let selectedTokenDecimals = props.selectedToken && tokenDecimals.get(props.selectedToken);
     const orderAmountRealBigNumber: "" | undefined | 0 | BigNumber = props.merchantAmount && props.selectedToken && selectedTokenDecimals &&
         ( new BigNumber(Number(props.merchantAmount).toString()).multipliedBy(new BigNumber((10 ** selectedTokenDecimals).toString())));
 
@@ -186,7 +184,6 @@ export function ProcessPayment(props: {
 
     //TODO estimate gas fee for the transfer from and do the maths to subtract it from the merchant and spc fee amounts
     //TODO Account Abstraction / Paymaster could be the way to go
-
     //TODO create a debug function
     // console.log("Selected token: " + props.selectedToken);
     // console.log("Selected chain id: " + chain?.id);
@@ -215,8 +212,8 @@ export function ProcessPayment(props: {
         }
         const balanceStr : string = balance.toString();
         const balanceVar = new BigNumber(balanceStr);
-        let b = balanceVar.gte(new BigNumber(orderAmount));
-        return b;
+        let hasEnoughBalance = balanceVar.gte(new BigNumber(orderAmount));
+        return hasEnoughBalance;
     }
 
     /****************************************************/
@@ -224,7 +221,7 @@ export function ProcessPayment(props: {
     /****************************************************/
     let deps = [props.sessionNotFound, props.isConnected, props.merchantAmount, props.selectedToken, props.merchantPublicAddress,
         address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash, isTxValid]
-    //useWhatChanged(deps,'props.sessionNotFound, props.isConnected, props.merchantAmount, props.selectedToken, props.merchantPublicAddress, address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash, isTxValid');
+    // useWhatChanged(deps,'props.sessionNotFound, props.isConnected, props.merchantAmount, props.selectedToken, props.merchantPublicAddress, address, balance, isBalanceEnough, isApproveSuccess, isApproveLoading, approveStatus, txHash, isTxValid');
         useEffect(() => {
         let account = getAccount();
         setAddress(account.address);
@@ -250,7 +247,7 @@ export function ProcessPayment(props: {
             {!props.sessionNotFound && props.selectedToken != 'ETH' ?
                 <Center paddingBottom={"40px"}>
                     {/* dev purposes for seeing the content: {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
-                    {/*{isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
+                    {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}
                     {(isConnected && !isBalanceEnough && !txUrl) ?
                         (isApproveLoading && (!isApproveSuccess || !isBalanceEnough) || (isApproveSuccess && !isBalanceEnough)) ?
                             <Spinner thickness='2px' speed='0.65s' size="xl" color="blue.500"/> :
@@ -298,7 +295,10 @@ export function ProcessPayment(props: {
                     </Alert>
                 </Center> : null
             }
-
+            {/*ZERDEV TESTS*/}
+            {/*<Button color={"white"} backgroundColor="#0E76FD" onClick={() => batchMint}>*/}
+            {/*    {isBatchLoadin ? 'loading...' : 'Batch Example'}*/}
+            {/*</Button>*/}
 
             {!props.sessionNotFound && !isTxValid && isTxBeingValidated?
                 <Center>

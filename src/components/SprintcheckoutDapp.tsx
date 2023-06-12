@@ -1,4 +1,6 @@
-import {configureChains, createClient, useAccount, useNetwork, WagmiConfig} from 'wagmi'
+import {useAccount, useNetwork} from 'wagmi'
+import {configureChains} from '@wagmi/core'
+
 import {
   Alert,
   AlertIcon,
@@ -22,29 +24,35 @@ import * as React from "react";
 import {useEffect, useState} from "react";
 import axios, {AxiosResponse} from "axios";
 import {ProcessPayment} from "./ProcessPayment";
-import {ConnectButton, connectorsForWallets, RainbowKitProvider} from "@rainbow-me/rainbowkit";
-import {optimism, optimismGoerli, polygon, polygonMumbai, zkSync, zkSyncTestnet, avalancheFuji} from "@wagmi/core/chains";
-import {metaMaskWallet, walletConnectWallet} from "@rainbow-me/rainbowkit/wallets";
+import {ConnectButton} from "@rainbow-me/rainbowkit";
+import {
+  avalancheFuji,
+  optimism,
+  optimismGoerli,
+  polygon,
+  polygonMumbai,
+  zkSync,
+  zkSyncTestnet
+} from "@wagmi/core/chains";
 import {publicProvider} from "wagmi/providers/public";
 
-let defaultChains: any[] = [];
-let merchantChains: any[] = [];
-let client: any;
+let defaultChains: any = [];
 
-export function setupChains(defaultChains: any[]) {
-  const {chains, provider, webSocketProvider} = configureChains(
+export function setupChains(defaultChains: Chain[]) {
+
+  const {chains, publicClient, webSocketPublicClient} = configureChains(
     defaultChains,
     [publicProvider()],
   );
 
-  // You can perform additional actions here if needed
-
-  return {chains, provider, webSocketProvider};
+  return {chains, publicClient, webSocketPublicClient};
 }
 
 const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
 //const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
 const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
+const walletConnectProjectId = '70f630470ab734f0a78073b4eb4fc927' // TODO check cloud walletconnect
+
 
 interface IHash {
   [details: string]: number;
@@ -175,27 +183,6 @@ export function SprintcheckoutDapp() {
             loadChains(psChain);
           });
 
-          if (!client) {
-            /** ********************************************  DYNAMIC CHAINS  ******************************************** **/
-            const {chains, provider, webSocketProvider} = setupChains(defaultChains);
-            merchantChains = chains;
-            let connectors = connectorsForWallets([
-              {
-                groupName: 'Recommended',
-                wallets: [
-                  metaMaskWallet({chains: merchantChains}),
-                  walletConnectWallet({chains: merchantChains}),
-                ],
-              },
-            ]);
-            client = createClient({
-              autoConnect: true,
-              connectors,
-              provider,
-              webSocketProvider,
-            });
-            /** ********************************************  END DYNAMIC CHAINS  ******************************************** **/
-          }
           let selectedChainList = chain && paymentSettings.data.chains.filter((aChain: {
             id: number;
           }) => aChain.id === chain?.id);
@@ -392,20 +379,19 @@ export function SprintcheckoutDapp() {
         )}
 
         {/*TODO: Connect Button should refresh the Approve/Pay buttons in our component when changing Metamask address */}
-        {client && merchantChains && <WagmiConfig client={client}>
-            <RainbowKitProvider chains={merchantChains}>
-                <Center alignContent="center" marginTop={10} pb={30} id={"connectButtonId"}>
-                    <MyComponent setChain={setChain} setIsConnected={setIsConnected}/>
-                    <ConnectButton accountStatus={"address"} chainStatus="name" showBalance={false}/>
-                </Center>
-              {/*{isConnected ?*/}
-                <ProcessPayment backendPaymentSessionId={backendPaymentSessionId} sessionNotFound={sessionNotFound}
-                                isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId}
-                                merchantId={merchantId} merchantPublicAddress={merchantPublicAddress}
-                                selectedToken={selectedToken}
-                                successUrl={successUrl} failUrl={failUrl}/>
-            </RainbowKitProvider>
-        </WagmiConfig>}
+        {/*{config && merchantChains &&*/}
+        {/*          <RainbowKitProvider chains={merchantChains}>*/}
+                    <Center alignContent="center" marginTop={10} pb={30} id={"connectButtonId"}>
+                        <MyComponent setChain={setChain} setIsConnected={setIsConnected}/>
+                        <ConnectButton accountStatus={"address"} chainStatus="name" showBalance={false}/>
+                    </Center>
+                  {/*{isConnected ?*/}
+                    <ProcessPayment backendPaymentSessionId={backendPaymentSessionId} sessionNotFound={sessionNotFound}
+                                    isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId}
+                                    merchantId={merchantId} merchantPublicAddress={merchantPublicAddress}
+                                    selectedToken={selectedToken}
+                                    successUrl={successUrl} failUrl={failUrl}/>
+                {/*</RainbowKitProvider>*/}
         {/*}*/}
 
         {/* TODO add icons and links */}

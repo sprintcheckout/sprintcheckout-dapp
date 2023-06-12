@@ -1,25 +1,34 @@
 import '@rainbow-me/rainbowkit/styles.css'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom/client'
+import {WagmiConfig} from 'wagmi'
 
 import {App} from './App'
-import {ChakraProvider, extendTheme} from "@chakra-ui/react";
+import {useInitPublicClient} from './wagmi'
+import {ChakraProvider} from "@chakra-ui/react";
+import {RainbowKitProvider} from "@rainbow-me/rainbowkit";
 
-const customTheme = extendTheme({
-  styles: {
-    global: {
-      "html, body": {
-        backgroundColor: "#294365",
-        height: "100%",
-      },
-    },
-  },
-});
+
+const InitComponent = () => {
+  const { config, chains } = useInitPublicClient();
+  return <div>
+    { (!chains && !config)? "":
+      <div>
+        <WagmiConfig config={config}>
+          <RainbowKitProvider chains={chains!}>
+          <ChakraProvider>
+            <App/>
+          </ChakraProvider>
+          </RainbowKitProvider>
+        </WagmiConfig>
+      </div>
+    }
+  </div>;
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
+
   // <React.StrictMode>
-  <ChakraProvider theme={customTheme}>
-    <App/>
-  </ChakraProvider>
+  <InitComponent />
   // </React.StrictMode>,
 )
