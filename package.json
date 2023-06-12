@@ -19,8 +19,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "util": "^0.12.5",
-    "viem": "~1.0.5",
-    "wagmi": "^1.1.1"
+    "wagmi": "^1.0.1"
   },
   "devDependencies": {
     "@simbathesailor/use-what-changed": "^2.0.0",
