@@ -1,18 +1,35 @@
 import '@rainbow-me/rainbowkit/styles.css'
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom/client'
-import { WagmiConfig } from 'wagmi'
+import {useAccount, useNetwork, WagmiConfig} from 'wagmi'
 
-import { App } from './App'
-import { chains, config } from './wagmi'
+import {App} from './App'
+import {useInitPublicClient} from './wagmi'
+import {ChakraProvider} from "@chakra-ui/react";
+import {Chain} from "@wagmi/chains";
+import {RainbowKitProvider} from "@rainbow-me/rainbowkit";
+
+
+const InitComponent = () => {
+  const { config, chains } = useInitPublicClient();
+  return <div>
+    { (!chains && !config)? "":
+      <div>
+        <WagmiConfig config={config}>
+          <RainbowKitProvider chains={chains!}>
+          <ChakraProvider>
+            <App/>
+          </ChakraProvider>
+          </RainbowKitProvider>
+        </WagmiConfig>
+      </div>
+    }
+  </div>;
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <WagmiConfig config={config}>
-      <RainbowKitProvider chains={chains}>
-        <App />
-      </RainbowKitProvider>
-    </WagmiConfig>
-  </React.StrictMode>,
+
+  // <React.StrictMode>
+  <InitComponent />
+  // </React.StrictMode>,
 )
