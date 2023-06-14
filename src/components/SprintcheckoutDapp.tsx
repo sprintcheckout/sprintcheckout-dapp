@@ -1,5 +1,4 @@
 import {useAccount, useNetwork} from 'wagmi'
-import {configureChains} from '@wagmi/core'
 
 import {
   Alert,
@@ -25,34 +24,13 @@ import {useEffect, useState} from "react";
 import axios, {AxiosResponse} from "axios";
 import {ProcessPayment} from "./ProcessPayment";
 import {ConnectButton} from "@rainbow-me/rainbowkit";
-import {
-  avalancheFuji,
-  optimism,
-  optimismGoerli,
-  polygon,
-  polygonMumbai,
-  zkSync,
-  zkSyncTestnet
-} from "@wagmi/core/chains";
-import {publicProvider} from "wagmi/providers/public";
 
-let defaultChains: any = [];
-
-export function setupChains(defaultChains: Chain[]) {
-
-  const {chains, publicClient, webSocketPublicClient} = configureChains(
-    defaultChains,
-    [publicProvider()],
-  );
-
-  return {chains, publicClient, webSocketPublicClient};
-}
 
 const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
 //const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
 const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
 const walletConnectProjectId = '70f630470ab734f0a78073b4eb4fc927' // TODO check cloud walletconnect
-
+const logEnabled = true;
 
 interface IHash {
   [details: string]: number;
@@ -69,7 +47,6 @@ interface TokenConversionCollections {
 }
 
 let tokenConversionsList: TokenConversionCollections;
-let authResponse: AxiosResponse;
 
 const MyComponent = (props: {
   setChain: (currentChain: (Chain & { unsupported?: boolean }) | undefined) => void
@@ -83,7 +60,6 @@ const MyComponent = (props: {
   }, [chain, chains, isConnected]);
   return <div></div>;
 }
-
 
 export function SprintcheckoutDapp() {
 
@@ -99,6 +75,7 @@ export function SprintcheckoutDapp() {
   tokenRoundDecimals["DAI"] = 2;
   tokenRoundDecimals["USDT"] = 2;
   tokenRoundDecimals["USDC"] = 2;
+  tokenRoundDecimals["USDCE"] = 2;
   tokenRoundDecimals["CTT"] = 2;
   tokenRoundDecimals["BUSD"] = 2;
   tokenRoundDecimals["ETH"] = 6;
@@ -106,6 +83,10 @@ export function SprintcheckoutDapp() {
   tokenRoundDecimals["BTC"] = 6;
   tokenRoundDecimals["WBTC"] = 6;
   tokenRoundDecimals["AVAX"] = 6;
+  tokenRoundDecimals["WAVAX"] = 6;
+  tokenRoundDecimals["TTRESR"] = 2;
+  tokenRoundDecimals["TSMRTR"] = 2;
+  tokenRoundDecimals["SMRTR"] = 2;
 
   const [selectedToken, setSelectedToken] = useState<string | undefined>("");
   const [selectedCurrency, setSelectedCurrency] = useState<string | undefined>("");
@@ -136,61 +117,35 @@ export function SprintcheckoutDapp() {
     setSelectedCurrency(currency);
   }
 
-  function loadChains(psChain: { name: string; network: string; active: boolean }) {
-    if (psChain.active) {
-      let chainAndNetwork: string = psChain.name + "-" + psChain.network;
-      switch (chainAndNetwork) {
-        case "zksync-mainnet":
-          defaultChains.push(zkSync)
-          break;
-        case "zksync-goerli":
-          defaultChains.push(zkSyncTestnet)
-          break;
-        case "polygon-mainnet":
-          defaultChains.push(polygon)
-          break;
-        case "polygon-mumbai":
-          defaultChains.push(polygonMumbai)
-          break;
-        case "optimism-mainnet":
-          defaultChains.push(optimism)
-          break;
-        case "optimism-goerli":
-          defaultChains.push(optimismGoerli)
-          break;
-        case "avalanche-fuji":
-          defaultChains.push(avalancheFuji)
-          break;
-        default:
-          console.log("No chain available");
-      }
-    }
+  function processPaymentSettings(paymentSettings: AxiosResponse<any>) {
+    console.log("paymentSettings.data", paymentSettings.data);
+    let selectedChainList = chain && paymentSettings.data.chains.filter((aChain: {
+      id: number;
+    }) => aChain.id === chain?.id);
+    selectedChainList && selectedChainList[0] && selectedChainList[0].publicAddress && setMerchantPublicAddress(selectedChainList[0].publicAddress);
+    selectedChainList && selectedChainList[0] && !selectedChain && setSelectedChain(selectedChainList[0]);
+    selectedChainList && selectedChainList[0] && getTokenConversion(paymentSessionId, selectedChainList[0]);
   }
 
   useEffect(() => {
-    setPricesForAmountRounded(null);
     const search = window.location.search;
     const params = new URLSearchParams(search);
     const paymentSessionIdB64 = params.get('uid');
     paymentSessionId = Buffer.from(paymentSessionIdB64 || '', "base64").toString();
     if (paymentSessionId) {
       setBackendPaymentSessionId(paymentSessionId);
+
+      if (merchantId && orderId && successUrl && failUrl && cancelUrl && amount && selectedCurrency) {
+        getMerchantPaymentSettings(merchantId).then(paymentSettings => {
+          processPaymentSettings(paymentSettings);
+        });
+      }
       getPaymentSession(paymentSessionId).then(paymentSession => {
         setDataFromPaymentSession(paymentSession);
         getMerchantPaymentSettings(paymentSession.data.merchantId).then(paymentSettings => {
-
-          paymentSettings.data.chains.map((psChain: { name: string, network: string, active: boolean }) => {
-            loadChains(psChain);
-          });
-
-          let selectedChainList = chain && paymentSettings.data.chains.filter((aChain: {
-            id: number;
-          }) => aChain.id === chain?.id);
-          selectedChainList && selectedChainList[0] && selectedChainList[0].publicAddress && setMerchantPublicAddress(selectedChainList[0].publicAddress);
-          selectedChainList && selectedChainList[0] && !selectedChain && setSelectedChain(selectedChainList[0]);
-          selectedChainList && selectedChainList[0] && getTokenConversion(paymentSessionId, selectedChainList[0]);
+          processPaymentSettings(paymentSettings);
         });
-        getTokenConversion(paymentSessionId, selectedChain);
+        //getTokenConversion(paymentSessionId, selectedChain);
       })
         .catch(err => {
           if (err.toString().indexOf("Network Error") > -1) {
@@ -221,6 +176,7 @@ export function SprintcheckoutDapp() {
   function getTokenConversion(id: string, selectedChainParam: any) {
 
     let tokensResponse = axios.get(SPRINTCHECKOUT_BACKEND_API_URL_V2 + '/payment_session/token_conversions/' + id);
+
     tokensResponse.then(({data}) => {
       tokenConversionsList = data;
       let pricesForAmount = tokenConversionsList?.tokenPricesForAmount;
@@ -267,7 +223,7 @@ export function SprintcheckoutDapp() {
     let pricesForJustOne = tokenConversionsList?.tokenPricesForJustOne;
     let selectedTokenConversion = pricesForJustOne?.filter((elem: {
       symbol: string;
-    }) => elem.symbol === tokenSymbol.toLowerCase())
+    }) => (elem.symbol === tokenSymbol.toLowerCase() || elem.symbol === tokenSymbol))
     let conversion = selectedTokenConversion.at(0)?.conversion?.toFixed(tokenRoundDecimals[tokenSymbol!])?.toString();
     setSelectedToken(tokenSymbol.toUpperCase());
     setTokenConversionRate(conversion);
@@ -278,7 +234,7 @@ export function SprintcheckoutDapp() {
     let pricesForAmount = tokenConversionsList?.tokenPricesForAmount;
     let selectedTokenConversion = pricesForAmount?.filter((elem: {
       symbol: string;
-    }) => elem.symbol === tokenSymbol.toLowerCase())
+    }) => (elem.symbol === tokenSymbol.toLowerCase() || elem.symbol === tokenSymbol))
     let conversion = selectedTokenConversion.at(0)?.conversion?.toFixed(tokenRoundDecimals[tokenSymbol!])?.toString();
     tokenAmountToPay = selectedTokenConversion.at(0)?.conversion!;
     setTokenAmount(conversion);
@@ -381,17 +337,17 @@ export function SprintcheckoutDapp() {
         {/*TODO: Connect Button should refresh the Approve/Pay buttons in our component when changing Metamask address */}
         {/*{config && merchantChains &&*/}
         {/*          <RainbowKitProvider chains={merchantChains}>*/}
-                    <Center alignContent="center" marginTop={10} pb={30} id={"connectButtonId"}>
-                        <MyComponent setChain={setChain} setIsConnected={setIsConnected}/>
-                        <ConnectButton accountStatus={"address"} chainStatus="name" showBalance={false}/>
-                    </Center>
-                  {/*{isConnected ?*/}
-                    <ProcessPayment backendPaymentSessionId={backendPaymentSessionId} sessionNotFound={sessionNotFound}
-                                    isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId}
-                                    merchantId={merchantId} merchantPublicAddress={merchantPublicAddress}
-                                    selectedToken={selectedToken}
-                                    successUrl={successUrl} failUrl={failUrl}/>
-                {/*</RainbowKitProvider>*/}
+        <Center alignContent="center" marginTop={10} pb={30} id={"connectButtonId"}>
+          <MyComponent setChain={setChain} setIsConnected={setIsConnected}/>
+          <ConnectButton accountStatus={"address"} chainStatus="name" showBalance={false}/>
+        </Center>
+        {/*{isConnected ?*/}
+        <ProcessPayment backendPaymentSessionId={backendPaymentSessionId} sessionNotFound={sessionNotFound}
+                        isConnected={isConnected} merchantAmount={tokenAmount} orderId={orderId}
+                        merchantId={merchantId} merchantPublicAddress={merchantPublicAddress}
+                        selectedToken={selectedToken}
+                        successUrl={successUrl} failUrl={failUrl}/>
+        {/*</RainbowKitProvider>*/}
         {/*}*/}
 
         {/* TODO add icons and links */}

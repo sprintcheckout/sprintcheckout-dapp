@@ -2,6 +2,7 @@ import {getDefaultWallets} from '@rainbow-me/rainbowkit'
 import {configureChains, createConfig} from 'wagmi'
 import {publicProvider} from 'wagmi/providers/public'
 import {
+  avalanche,
   avalancheFuji,
   optimism,
   optimismGoerli,
@@ -53,6 +54,9 @@ function loadChains(psChain: { name: string; network: string; active: boolean })
         break;
       case "avalanche-fuji":
         defaultChains.push(avalancheFuji)
+        break;
+      case "avalanche-mainnet":
+        defaultChains.push(avalanche)
         break;
       default:
         console.log("No chain available");
