@@ -8,7 +8,6 @@ import {
   Flex,
   Link,
   Select,
-  Spinner,
   Table,
   TableContainer,
   Tbody,
@@ -296,26 +295,29 @@ export function SprintcheckoutDapp() {
                     <Td>{amount}</Td>
                     <Td>{selectedCurrency}</Td>
                   </Tr>
-                  <Tr>
-                    {tokenAmount?<Td alignContent={"left"} fontWeight={"bold"} color="#3182CE">{tokenAmount}</Td> :
-                      <Td alignContent={"right"} fontWeight={"bold"} color="#3182CE">-</Td>}
-                    <Td>
-                      <Select style={{fontWeight: 'bold'}} color={"#3182CE"} borderRadius="20px"
-                              onChange={onChangeSendTokenAndConversion}>
-                        <option key="select" value="-">Select</option>
-                        {
-                          // @ts-ignore
-                          pricesForAmountRounded?.map((elem, index) => {
-                            if (index === 0 && !token) {
-                              token = elem.symbol.toUpperCase();
-                            }
-                            return <option key={elem.symbol} value={elem.symbol}>
-                              {elem.symbol}
-                            </option>;
-                          })}
-                      </Select>
-                    </Td>
-                  </Tr>
+                  {isConnected ?
+                    <Tr>
+                      {tokenAmount ?
+                        <Td alignContent={"left"} fontWeight={"bold"} color="#3182CE">{tokenAmount}</Td> :
+                        <Td alignContent={"right"} fontWeight={"bold"} color="#3182CE">-</Td>
+                      }
+                      <Td>
+                        <Select style={{fontWeight: 'bold'}} color={"#3182CE"} borderRadius="20px"
+                                onChange={onChangeSendTokenAndConversion}>
+                          <option key="select" value="-">Select</option>
+                          {
+                            // @ts-ignore
+                            pricesForAmountRounded?.map((elem, index) => {
+                              if (index === 0 && !token) {
+                                token = elem.symbol.toUpperCase();
+                              }
+                              return <option key={elem.symbol} value={elem.symbol}>
+                                {elem.symbol}
+                              </option>;
+                            })}
+                        </Select>
+                      </Td>
+                    </Tr> : null}
                 </Tbody>
               </Table>
             </TableContainer>
