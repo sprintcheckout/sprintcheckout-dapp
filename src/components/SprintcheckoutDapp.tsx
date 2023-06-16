@@ -300,7 +300,7 @@ export function SprintcheckoutDapp() {
                     {tokenAmount?<Td alignContent={"left"} fontWeight={"bold"} color="#3182CE">{tokenAmount}</Td> :
                       <Td alignContent={"right"} fontWeight={"bold"} color="#3182CE">-</Td>}
                     <Td>
-                      <Select style={{fontWeight: 'bold'}} color={"white"} backgroundColor="#0E76FD" borderRadius="20px"
+                      <Select style={{fontWeight: 'bold'}} color={"#3182CE"} borderRadius="20px"
                               onChange={onChangeSendTokenAndConversion}>
                         <option key="select" value="-">Select</option>
                         {
