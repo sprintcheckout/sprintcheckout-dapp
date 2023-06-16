@@ -65,8 +65,7 @@ function loadChains(psChain: { name: string; network: string; active: boolean })
 }
 
 export function setupChains(defaultChains: Chain[]) {
-
-  console.log("defaultChains", defaultChains);
+  import.meta.env.VITE_IS_LOG_ENABLED && console.log("Setup of default chains...", defaultChains);
   const {chains, publicClient, webSocketPublicClient} = configureChains(
     defaultChains,
     [publicProvider()],
@@ -84,10 +83,10 @@ export const useInitPublicClient = () => {
     const params = new URLSearchParams(search);
     const paymentSessionIdB64 = params.get('uid');
     paymentSessionId = Buffer.from(paymentSessionIdB64 || '', "base64").toString();
-    console.log("paymentSessionId", paymentSessionId);
     if (paymentSessionId) {
+      import.meta.env.VITE_IS_LOG_ENABLED && console.log("Payment session id:", paymentSessionId);
       getPaymentSessionChains(paymentSessionId).then(psChains => {
-        console.log("psChains", psChains);
+        import.meta.env.VITE_IS_LOG_ENABLED && console.log("Chains from session:", psChains);
         psChains.data.map((psChain: { name: string, network: string, active: boolean }) => {
           loadChains(psChain);
         });

@@ -6,7 +6,6 @@ import SPRINTCHECKOUT_CONTRACT_ABI from "../resources/abis/abi.json";
 import ERC20_CONTRACT_ABI from "../resources/abis/erctokenabi.json";
 import axios from "axios";
 import BigNumber from "bignumber.js";
-// import {useWhatChanged} from "@simbathesailor/use-what-changed";
 
 const SPRINTCHECKOUT_ZKSYNC_CONTRACT_ADDRESS_GOERLI = '0xcF7c7C4330829B3D98B4c9e9aB0fD01DfEdD8807'; // GOERLI ADDRESS
 const SPRINTCHECKOUT_POLYGON_CONTRACT_ADDRESS_MUMBAI = '0x3D28aCb2aCCF54FcD37f718Ea58dD780aCD2927d'; // POLYGON MUMBAI ADDRESS
@@ -142,7 +141,7 @@ export function ProcessPayment(props: {
     /** ************************************************************************************************* **/
     const {data: balance, isError, isLoading: allowanceLoading} = useContractRead({
         // @ts-ignore
-        address: props.selectedToken && props.selectedToken != 'ETH' && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract],
+        address: props.selectedToken && props.selectedToken !== "-" && props.selectedToken != 'ETH' && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract],
         abi: ERC20_CONTRACT_ABI,
         functionName: 'allowance',
         args: [address, chain && sprintcheckoutContractAddressByNetwork[chain?.id]],
@@ -152,14 +151,12 @@ export function ProcessPayment(props: {
     /** ************************************************************************************************* **/
     /**                                         APPROVAL                                                  **/
     /** ************************************************************************************************* **/
-    let selectedTokenDecimals = props.selectedToken && tokenDecimals.get(props.selectedToken);
+    let selectedTokenDecimals = props.selectedToken && props.selectedToken !== "-" && tokenDecimals.get(props.selectedToken);
     // const highAmountForApproval = new BigNumber((10 ** 18).toString()); // TODO this approves a high amount based on amount to pay, think about which number will be
     const highAmountForApproval = selectedTokenDecimals && ( new BigNumber(Number(props.merchantAmount).toString()).multipliedBy(new BigNumber((10 ** selectedTokenDecimals).toString()))); // TODO this approves a high amount based on amount to pay, think about which number will be
-    // console.log("highAmountForApproval");
-    // console.log(highAmountForApproval);
     const {config: erc20ConfigApprove} = usePrepareContractWrite({
         // @ts-ignore
-        address: props.selectedToken && props.selectedToken != 'ETH' && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract],
+        address: props.selectedToken && props.selectedToken !== "-" && props.selectedToken != 'ETH' && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract],
         abi: ERC20_CONTRACT_ABI,
         functionName: 'approve',
         args: [chain && sprintcheckoutContractAddressByNetwork[chain?.id], highAmountForApproval]
@@ -178,7 +175,7 @@ export function ProcessPayment(props: {
     /**                                         TRANSFER FROM                                             **/
     /** ************************************************************************************************* **/
     //TODO Take into account ERC20 decimals for the transfer from operation
-    const orderAmountRealBigNumber: "" | undefined | 0 | BigNumber = props.merchantAmount && props.selectedToken && selectedTokenDecimals &&
+    const orderAmountRealBigNumber: "" | undefined | false | 0 | BigNumber = props.merchantAmount && props.selectedToken && props.selectedToken !== "-" && selectedTokenDecimals &&
         ( new BigNumber(Number(props.merchantAmount).toString()).multipliedBy(new BigNumber((10 ** selectedTokenDecimals).toString())));
 
     // console.log("orderAmountRealBigNumber" + orderAmountRealBigNumber);
@@ -211,7 +208,7 @@ export function ProcessPayment(props: {
         address: chain && enablePayCall && orderAmountRealBigNumber && spcFeeToPayRealBigNumber ? sprintcheckoutContractAddressByNetwork[chain?.id] : undefined,
         abi: SPRINTCHECKOUT_CONTRACT_ABI,
         functionName: 'transferFrom',
-        args: [props.merchantPublicAddress && props.selectedToken && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract], address, props.merchantPublicAddress, SPRINTCHECKOUT_FEE_ADDRESS,
+        args: [props.merchantPublicAddress && props.selectedToken && props.selectedToken !== "-" && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract], address, props.merchantPublicAddress, SPRINTCHECKOUT_FEE_ADDRESS,
             merchantAmountRealBigNumber ? new BigNumber(merchantAmountRealBigNumber.toString()) : undefined, spcFeeToPayRealBigNumber ? new BigNumber(spcFeeToPayRealBigNumber.toString()) : undefined],
     })
 
@@ -259,7 +256,7 @@ export function ProcessPayment(props: {
 
     return (
         <>
-            {!props.sessionNotFound && props.selectedToken != 'ETH' ?
+            {!props.sessionNotFound && props.selectedToken != 'ETH' && props.selectedToken !== "-" ?
                 <Center paddingBottom={"40px"}>
                     {/* dev purposes for seeing the content: {isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
                     {/*{isConnected ? <Text>Balance: {balance?.toString()}</Text> : null}*/}
@@ -269,7 +266,7 @@ export function ProcessPayment(props: {
                             <Button color={"white"} backgroundColor="#0E76FD" onClick={() => approve?.()}>
                                 Approve
                             </Button> :
-                        isConnected && isBalanceEnough && props.merchantAmount && props.selectedToken && !txUrl ?
+                        isConnected && isBalanceEnough && props.merchantAmount && props.selectedToken && props.selectedToken !== "-" && !txUrl ?
                             <Button color={"white"} backgroundColor="#0E76FD" onClick={() => setEnablePayCall(true)}>
                                 Pay {props.merchantAmount} {props.selectedToken}
                             </Button> : null
