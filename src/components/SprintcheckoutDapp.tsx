@@ -27,8 +27,8 @@ import {ConnectButton} from "@rainbow-me/rainbowkit";
 import {SpcLogo} from "./SpcLogo";
 
 
-//const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
-const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
+const SPRINTCHECKOUT_BASE_URL = 'https://sprintcheckout-mvp.herokuapp.com/checkout';
+//const SPRINTCHECKOUT_BASE_URL = 'http://localhost:8080/checkout'; // TODO RESTORE for local dev
 const SPRINTCHECKOUT_BACKEND_API_URL_V2 = SPRINTCHECKOUT_BASE_URL + '/v2';
 const walletConnectProjectId = '70f630470ab734f0a78073b4eb4fc927' // TODO check cloud walletconnect
 const logEnabled = true;
