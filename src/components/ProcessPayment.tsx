@@ -208,7 +208,7 @@ export function ProcessPayment(props: {
         abi: SPRINTCHECKOUT_CONTRACT_ABI,
         functionName: 'transferFrom',
         args: [props.merchantPublicAddress && props.selectedToken && props.selectedToken !== "-" && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract], address, props.merchantPublicAddress, SPRINTCHECKOUT_FEE_ADDRESS,
-            merchantAmountRealBigNumber ? new BigNumber(merchantAmountRealBigNumber.toString()) : undefined, spcFeeToPayRealBigNumber ? new BigNumber(spcFeeToPayRealBigNumber.toString()) : undefined],
+            merchantAmountRealBigNumber ? Number(new BigNumber(merchantAmountRealBigNumber.toString())) : undefined, spcFeeToPayRealBigNumber ? Number(new BigNumber(spcFeeToPayRealBigNumber.toString())) : undefined],
     })
 
     const {data: txHash, isLoading, isSuccess, write: pay} = useContractWrite(config)
