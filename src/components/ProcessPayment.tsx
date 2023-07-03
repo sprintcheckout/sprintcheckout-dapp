@@ -152,14 +152,13 @@ export function ProcessPayment(props: {
     /**                                         APPROVAL                                                  **/
     /** ************************************************************************************************* **/
     let selectedTokenDecimals = props.selectedToken && props.selectedToken !== "-" && tokenDecimals.get(props.selectedToken);
-    // const highAmountForApproval = new BigNumber((10 ** 18).toString()); // TODO this approves a high amount based on amount to pay, think about which number will be
     const highAmountForApproval = selectedTokenDecimals && ( new BigNumber(Number(props.merchantAmount).toString()).multipliedBy(new BigNumber((10 ** selectedTokenDecimals).toString()))); // TODO this approves a high amount based on amount to pay, think about which number will be
     const {config: erc20ConfigApprove} = usePrepareContractWrite({
         // @ts-ignore
         address: props.selectedToken && props.selectedToken !== "-" && props.selectedToken != 'ETH' && chain && contractAddresses[props.selectedToken!][chain?.id as keyof NetworkContract],
         abi: ERC20_CONTRACT_ABI,
         functionName: 'approve',
-        args: [chain && sprintcheckoutContractAddressByNetwork[chain?.id], highAmountForApproval]
+        args: [chain && sprintcheckoutContractAddressByNetwork[chain?.id], Number(highAmountForApproval)]
     })
 
     const {
