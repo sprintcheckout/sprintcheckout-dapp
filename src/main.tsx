@@ -1,4 +1,5 @@
 import '@rainbow-me/rainbowkit/styles.css'
+import './resources/styles.css'
 import * as React from 'react'
 import * as ReactDOM from 'react-dom/client'
 import {WagmiConfig} from 'wagmi'

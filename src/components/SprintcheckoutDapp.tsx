@@ -104,6 +104,9 @@ export function SprintcheckoutDapp() {
   const [selectedChain, setSelectedChain] = useState<any>();
   const [pricesForAmountRounded, setPricesForAmountRounded] = useState<any>();
   const [tokenConversionRate, setTokenConversionRate] = useState<string | undefined>("");
+  const [merchantLogoUrl, setMerchantLogoUrl] = useState<string | undefined>("");
+  const [merchantName, setMerchantName] = useState<string | undefined>("");
+
 
   function setDataFromPaymentSession(paymentSession: AxiosResponse) {
 
@@ -125,6 +128,8 @@ export function SprintcheckoutDapp() {
     selectedChainList && selectedChainList[0] && selectedChainList[0].publicAddress && setMerchantPublicAddress(selectedChainList[0].publicAddress);
     selectedChainList && selectedChainList[0] && !selectedChain && setSelectedChain(selectedChainList[0]);
     selectedChainList && selectedChainList[0] && getTokenConversion(paymentSessionId, selectedChainList[0]);
+    setMerchantLogoUrl(paymentSettings.data.merchantLogoUrl);
+    setMerchantName(paymentSettings.data.merchantName);
   }
 
   useEffect(() => {
@@ -259,7 +264,7 @@ export function SprintcheckoutDapp() {
       <Box bg={"white"} flexDirection="column" width="50vh" borderRadius="10px" margin="0 auto" marginTop={140}>
 
         <Center marginTop="20px" marginBottom="20px">
-          <SpcLogo/>
+          <SpcLogo merchantLogoUrl={merchantLogoUrl} merchantName={merchantName}/>
         </Center>
         {/*<Box display="flex" flexDirection="column">*/}
         {/*{((!sessionNotFound && !networkError) && (!amount || !selectedCurrency || (!tokenAmount && selectedToken !== "-") || (!pricesForAmountRounded && selectedToken !== "-"))) ?*/}
@@ -352,12 +357,22 @@ export function SprintcheckoutDapp() {
         {/*<Center>*/}
         {/*    <Image src={"/src/resources/argent.png"} />*/}
         {/*</Center>*/}
+
       </Box>
       <Center mt={5}>
         <Text color={"#F9F9F9"} fontSize={14}>
           <Link href={cancelUrl}>Cancel and return to store</Link>
         </Text>
       </Center>
+      <Center mt={35}>
+        <Text color={"#F9F9F9"} fontSize={14}>
+          Powered by{' '}
+          <Box as="span" fontWeight="bold">
+            Sprintcheckout <Box as="span" mb={1.5} className={"circle"} display="inline-block"></Box>
+          </Box>
+        </Text>
+      </Center>
+
     </>
   )
 }
